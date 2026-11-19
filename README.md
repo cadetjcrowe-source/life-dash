@@ -56,38 +56,20 @@ After this, every push to `main` deploys to production, and every pull request g
 
 > **Recommended:** in the Neon integration settings, turn on **"Create a database branch for each Preview deployment"**. Pull-request previews then get their own copy of the database, so testing a PR (and its migrations) can never touch your real data. If you leave it off, previews use your production database.
 
-### 4. Set the environment variables
+### 4. Choose your password (no command line needed)
 
-In Vercel, go to **Settings → Environment Variables** and add these for **Production** and **Preview**:
+1. Open your Vercel site URL. Because no password is set yet, it shows a **Set up Life** page.
+2. Type the password you want and press **Continue**. It shows two keys with values (`AUTH_PASSWORD_HASH` and `SESSION_SECRET`), each with **Copy** buttons.
+3. In Vercel, go to **Settings → Environment Variables** and add both, pasting each key and its value.
+4. Go to **Deployments**, open the **⋯** menu on the top one, and choose **Redeploy**.
 
-| Variable | How to get it |
-| --- | --- |
-| `DATABASE_URL` | Added automatically in step 3. Use the **pooled** connection string (it contains `-pooler`). |
-| `AUTH_PASSWORD_HASH` | On your computer, in the repo folder: `node scripts/hash-password.mjs "your-password"`. Copy the `scrypt:…` value. |
-| `SESSION_SECRET` | Any random string of 32+ characters. Generate one with `openssl rand -base64 48`, or mash the keyboard for 50 characters. |
+Your actual password is never stored anywhere, only a scrambled (scrypt) version of it. Once it's set, the setup page switches itself off.
 
-`.env.example` lists all of them. Your actual password is never stored anywhere, only its scrypt hash. Never commit a real `.env` file (it's in `.gitignore`).
+(Prefer the terminal? `node scripts/hash-password.mjs "your-password"` gives the same hash, and `openssl rand -base64 48` makes a session secret.)
 
-Now go to **Deployments**, open the latest one, and click **Redeploy** (or just push a commit). The build runs the migrations (`npm run db:migrate`) automatically, so your tables are created on the first successful deploy.
+### 5. Starter projects
 
-### 5. Seed your projects (once)
-
-On your computer, in the repo folder:
-
-```bash
-npm install
-```
-```bash
-npx vercel link
-```
-```bash
-npx vercel env pull .env
-```
-```bash
-npm run db:seed
-```
-
-This adds the six starter projects and default habit targets. It's safe to run twice, because it skips anything that already exists. (Or skip it and add projects in the app.)
+These are added automatically on the first deploy: Northminster, Westbridge, your house track, the media club, drone permissions and the job search. This only happens once, so anything you delete or rename stays that way.
 
 ### 6. Install it on your iPhone
 

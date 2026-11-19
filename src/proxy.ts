@@ -2,11 +2,19 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 
 // Everything is private except the login page/API and the static PWA files.
-const PUBLIC = ["/login", "/api/login", "/manifest.webmanifest", "/sw.js"];
+const PUBLIC = ["/login", "/api/login", "/setup", "/api/setup", "/manifest.webmanifest"];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(p + "/"))) return NextResponse.next();
+
+  // Not set up yet: send everything to the setup page.
+  const configured =
+    (process.env.AUTH_PASSWORD_HASH ?? "").startsWith("scrypt:") && (process.env.SESSION_SECRET ?? "").length >= 32;
+  if (!configured) {
+    if (pathname.startsWith("/api/")) return NextResponse.json({ error: "Not set up" }, { status: 503 });
+    return NextResponse.redirect(new URL("/setup", req.url));
+  }
 
   const ok = await verifySessionToken(req.cookies.get(SESSION_COOKIE)?.value);
   if (ok) return NextResponse.next();

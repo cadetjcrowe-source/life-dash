@@ -16,10 +16,21 @@ const PROJECTS = [
 
 async function main() {
   const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is not set");
+  const auto = process.argv.includes("--first-run");
+  if (!url) {
+    if (auto) return console.warn("⚠︎ DATABASE_URL not set – skipping seed.");
+    throw new Error("DATABASE_URL is not set");
+  }
   const pool = new Pool({ connectionString: url, max: 1 });
   const db = drizzle(pool, { schema });
 
+  // On deploys (--first-run) only seed a brand-new database, so projects you
+  // delete or rename never come back.
+  const alreadySetUp = (await db.select().from(schema.settings).limit(1)).length > 0;
+  if (auto && alreadySetUp) {
+    await pool.end();
+    return console.log("✓ Database already set up – skipping seed");
+  }
   await db.insert(schema.settings).values({ id: 1, data: DEFAULT_SETTINGS }).onConflictDoNothing();
 
   const existing = new Set((await db.select({ name: schema.projects.name }).from(schema.projects)).map((p) => p.name));

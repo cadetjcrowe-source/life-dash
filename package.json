@@ -12,7 +12,7 @@
     "db:seed": "tsx scripts/seed.ts",
     "db:studio": "drizzle-kit studio",
     "hash-password": "node scripts/hash-password.mjs",
-    "vercel-build": "npm run db:migrate && next build"
+    "vercel-build": "npm run db:migrate && tsx scripts/seed.ts --first-run && next build"
   },
   "dependencies": {
     "@vercel/functions": "^3.11.3",

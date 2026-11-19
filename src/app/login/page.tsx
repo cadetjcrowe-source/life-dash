@@ -23,6 +23,10 @@ function LoginForm() {
       window.location.href = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
     } else {
       setBusy(false);
+      if (res.status === 503) {
+        window.location.href = "/setup";
+        return;
+      }
       setError(res.status === 401 ? "That password isn't right." : "Couldn't sign in — check the server settings.");
     }
   }
