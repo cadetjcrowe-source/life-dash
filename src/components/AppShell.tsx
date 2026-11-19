@@ -3,11 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SWRConfig } from "swr";
-import { swrConfig } from "@/lib/client";
+import { useEffect } from "react";
+import { CategoriesProvider } from "@/lib/categories";
+import { swrConfig, useSettings } from "@/lib/client";
+import { DEFAULT_SETTINGS } from "@/lib/constants";
+import type { FeatureKey } from "@/db/schema";
 import { Toaster } from "./Toast";
 import { cx } from "./ui";
 import {
   IconCalendar,
+  IconCamera,
+  IconChecklist,
+  IconDumbbell,
+  IconGrid,
   IconHabits,
   IconJournal,
   IconProjects,
@@ -24,18 +32,35 @@ const PRIMARY = [
   { href: "/projects", label: "Projects", Icon: IconProjects },
   { href: "/journal", label: "Journal", Icon: IconJournal },
 ];
-const SECONDARY = [
+type NavItem = { href: string; label: string; Icon: typeof IconToday; feature?: FeatureKey };
+const SECONDARY: NavItem[] = [
   { href: "/calendar", label: "Calendar", Icon: IconCalendar },
   { href: "/review", label: "Weekly review", Icon: IconReview },
+  { href: "/shots", label: "Shot ideas", Icon: IconCamera, feature: "shots" },
+  { href: "/kit", label: "Kit lists", Icon: IconChecklist, feature: "kit" },
+  { href: "/gym", label: "Gym plan", Icon: IconDumbbell, feature: "gymPlan" },
+  { href: "/pixels", label: "Year in pixels", Icon: IconGrid, feature: "pixels" },
   { href: "/settings", label: "Settings", Icon: IconSettings },
 ];
 
+/** Secondary pages, minus any whose feature is switched off in Settings. */
+export function useSecondaryNav() {
+  const { data } = useSettings();
+  const features = data?.features ?? DEFAULT_SETTINGS.features;
+  return SECONDARY.filter((n) => !n.feature || features[n.feature]);
+}
+
 const isActive = (path: string, href: string) => (href === "/" ? path === "/" : path.startsWith(href));
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
+  const secondary = useSecondaryNav();
+  useEffect(() => {
+    // Service worker: needed for push notifications on the installed iPhone app.
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+  }, []);
   return (
-    <SWRConfig value={swrConfig}>
+    <>
       <Toaster />
       <div className="min-h-dvh md:flex">
         {/* Desktop sidebar */}
@@ -45,7 +70,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="text-[20px] font-bold tracking-tight">Life</span>
           </Link>
           <nav className="flex flex-col gap-0.5">
-            {[...PRIMARY, ...SECONDARY.slice(0, 2)].map(({ href, label, Icon }) => (
+            {[...PRIMARY, ...secondary.filter((n) => n.href !== "/settings")].map(({ href, label, Icon }) => (
               <Link
                 key={href}
                 href={href}
@@ -100,8 +125,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </div>
       </nav>
-    </SWRConfig>
+    </>
   );
 }
 
-export { SECONDARY as SECONDARY_NAV };
+export function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <SWRConfig value={swrConfig}>
+      <CategoriesProvider>
+        <Shell>{children}</Shell>
+      </CategoriesProvider>
+    </SWRConfig>
+  );
+}

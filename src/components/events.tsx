@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import type { CalEvent } from "@/db/schema";
 import { addEvent, deleteEvent, skipOccurrence, updateEvent, type EventDraft } from "@/lib/actions";
-import { CATEGORIES, REPEATS, categoryColor } from "@/lib/constants";
+import { REPEATS } from "@/lib/constants";
+import { categoryColor, useCategoryNames } from "@/lib/categories";
 import { formatShort } from "@/lib/dates";
 import type { Occurrence } from "@/lib/recurrence";
 import { useToday } from "@/lib/useToday";
@@ -71,6 +72,7 @@ export function EventSheet({
   const today = useToday();
   const [d, setD] = useState<EventDraft>(blank(defaultDate ?? today));
   const [allDay, setAllDay] = useState(false);
+  const CATEGORY_NAMES = useCategoryNames();
   useEffect(() => {
     if (!open) return;
     const base = event ? { ...event } : blank(defaultDate ?? today);
@@ -160,7 +162,7 @@ export function EventSheet({
         </Field>
         <Field label="Category">
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((c) => {
+            {CATEGORY_NAMES.map((c) => {
               const col = categoryColor(c);
               const on = d.category === c;
               return (

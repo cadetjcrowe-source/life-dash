@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/session";
 
 // Everything is private except the login page/API and the static PWA files.
-const PUBLIC = ["/login", "/api/login", "/setup", "/api/setup", "/manifest.webmanifest"];
+// /api/cron checks CRON_SECRET itself; /sw.js must be fetchable for push notifications.
+const PUBLIC = ["/login", "/api/login", "/setup", "/api/setup", "/manifest.webmanifest", "/sw.js", "/api/cron"];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;

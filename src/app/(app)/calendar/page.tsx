@@ -6,7 +6,7 @@ import { EventItem, EventSheet, timeRange } from "@/components/events";
 import { IconChevronLeft, IconChevronRight, IconPlus } from "@/components/Icons";
 import { Button, Card, Empty, IconButton, PageHeader, Segmented, Skeleton, cx } from "@/components/ui";
 import { useEvents } from "@/lib/client";
-import { categoryColor } from "@/lib/constants";
+import { categoryColor } from "@/lib/categories";
 import { addDays, formatDayMonth, formatLong, formatMonthYear, formatWeekdayShort, nowTime, range, weekStart } from "@/lib/dates";
 import { expandEvents, type Occurrence } from "@/lib/recurrence";
 import { useToday } from "@/lib/useToday";

@@ -26,6 +26,7 @@ export const tasks = pgTable(
     done: boolean("done").notNull().default(false),
     completedOn: date("completed_on", { mode: "string" }),
     pinned: boolean("pinned").notNull().default(false),
+    isAssignment: boolean("is_assignment").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -135,11 +136,26 @@ export const weeklyReviews = pgTable("weekly_reviews", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export type FeatureKey = "golden" | "assignments" | "shots" | "kit" | "gymPlan" | "pixels" | "morningPush";
+export type TodayCardId = "weather" | "golden" | "assignments" | "events" | "tasks" | "habits" | "inbox";
+
+export type GymExercise = { id: string; name: string; sets: number; reps: string; notes: string };
+export type GymDay = { id: string; name: string; focus: string; exercises: GymExercise[] };
+
 export type Settings = {
   sleepTarget: number;
   waterTarget: number;
   creativeTarget: number;
   gymNudge: boolean;
+  features: Record<FeatureKey, boolean>;
+  todayCards: { id: TodayCardId; visible: boolean }[];
+  pixelsMode: "mood" | "productivity";
+  shotTags: string[];
+  gymPlan: GymDay[];
+  pushEnabled: boolean;
+  pushTime: string; // "HH:MM" Europe/London
+  pushLastSent: string | null; // YYYY-MM-DD
+  pushPrecisePingAt: string | null; // ISO – last time the 15-minute pinger called in
 };
 
 export const settings = pgTable("settings", {
@@ -148,7 +164,68 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// User-editable categories. Tasks/events/projects store the category *name*,
+// so renaming a category cascades to them (see /api/categories/[id]).
+export const categories = pgTable("categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull().unique(),
+  color: text("color").notNull().default("#9a9aa3"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const shotIdeas = pgTable("shot_ideas", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  description: text("description").notNull().default(""),
+  location: text("location").notNull().default(""),
+  bestTime: text("best_time").notNull().default("any"), // see SHOT_TIMES
+  link: text("link").notNull().default(""),
+  imageUrl: text("image_url").notNull().default(""),
+  tags: jsonb("tags").$type<string[]>().notNull().default([]),
+  shot: boolean("shot").notNull().default(false),
+  shotOn: date("shot_on", { mode: "string" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const kitLists = pgTable("kit_lists", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  emoji: text("emoji").notNull().default("🎒"),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const kitItems = pgTable(
+  "kit_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    listId: uuid("list_id")
+      .notNull()
+      .references(() => kitLists.id, { onDelete: "cascade" }),
+    text: text("text").notNull(),
+    checked: boolean("checked").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("kit_items_list_idx").on(t.listId)],
+);
+
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  userAgent: text("user_agent").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type Task = typeof tasks.$inferSelect;
+export type Category = typeof categories.$inferSelect;
+export type ShotIdea = typeof shotIdeas.$inferSelect;
+export type KitList = typeof kitLists.$inferSelect;
+export type KitItem = typeof kitItems.$inferSelect;
 export type InboxItem = typeof inboxItems.$inferSelect;
 export type CalEvent = typeof events.$inferSelect;
 export type HabitEntry = typeof habitEntries.$inferSelect;

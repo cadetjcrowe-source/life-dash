@@ -9,7 +9,7 @@ import { Button, Card, CardTitle, Empty, IconButton, PageHeader, Sheet, Skeleton
 import { addDays } from "@/lib/dates";
 import { deleteInbox, inboxToTask } from "@/lib/actions";
 import { useInbox, useTasks } from "@/lib/client";
-import { CATEGORIES, categoryColor } from "@/lib/constants";
+import { categoryColor, useCategoryNames } from "@/lib/categories";
 import { bucketOf, sortTasks, type Bucket } from "@/lib/tasks";
 import { useToday } from "@/lib/useToday";
 
@@ -28,6 +28,7 @@ export default function TasksPage() {
   const [edit, setEdit] = useState<Task | null | undefined>(undefined);
   const [showDone, setShowDone] = useState(false);
   const [convert, setConvert] = useState<InboxItem | null>(null);
+  const CATEGORY_NAMES = useCategoryNames();
 
   const visible = useMemo(() => (tasks ?? []).filter((t) => !filter || t.category === filter), [tasks, filter]);
   const groups = useMemo(() => {
@@ -50,7 +51,7 @@ export default function TasksPage() {
       />
 
       <div className="no-scrollbar -mx-4 mb-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
-        {[null, ...CATEGORIES].map((c) => (
+        {[null, ...CATEGORY_NAMES].map((c) => (
           <button
             key={c ?? "all"}
             onClick={() => setFilter(c)}
@@ -147,6 +148,7 @@ export default function TasksPage() {
 function ConvertSheet({ item, onClose }: { item: InboxItem | null; onClose: () => void }) {
   const today = useToday();
   const [category, setCategory] = useState<string>("Personal");
+  const CATEGORY_NAMES = useCategoryNames();
   const go = (due: string | null) => {
     if (!item) return;
     inboxToTask(item, { dueDate: due, category });
@@ -157,7 +159,7 @@ function ConvertSheet({ item, onClose }: { item: InboxItem | null; onClose: () =
       <p className="mb-4 rounded-xl bg-card-2 p-3 text-[17px]">{item?.text}</p>
       <p className="mb-2 text-[14px] font-medium text-muted">Category</p>
       <div className="mb-5 flex flex-wrap gap-2">
-        {CATEGORIES.map((c) => (
+        {CATEGORY_NAMES.map((c) => (
           <button
             key={c}
             onClick={() => setCategory(c)}

@@ -6,7 +6,8 @@ import { IconArchive, IconChevronDown, IconChevronUp, IconPlus } from "@/compone
 import { Button, Card, CategoryChip, Empty, Field, IconButton, PageHeader, Pill, Progress, Sheet, Skeleton, cx } from "@/components/ui";
 import { addProject, deleteProject, reorderProjects, updateProject, type ProjectDraft } from "@/lib/actions";
 import { useProjects } from "@/lib/client";
-import { CATEGORIES, PROJECT_STATUSES, categoryColor } from "@/lib/constants";
+import { PROJECT_STATUSES } from "@/lib/constants";
+import { categoryColor, useCategoryNames } from "@/lib/categories";
 
 const statusTone = (s: string) =>
   s === "active" ? "accent" : s === "done" ? "good" : s === "blocked" ? "danger" : s === "paused" ? "warn" : "muted";
@@ -133,6 +134,7 @@ const EMOJIS = ["📁", "🏰", "🌉", "🎧", "🎬", "🛩️", "💼", "🎮
 function ProjectSheet({ open, project, onClose }: { open: boolean; project?: Project | null; onClose: () => void }) {
   const blank: ProjectDraft = { name: "", emoji: "📁", category: "Personal", status: "active", progress: 0, nextAction: "", notes: "" };
   const [d, setD] = useState<ProjectDraft>(blank);
+  const CATEGORY_NAMES = useCategoryNames();
   useEffect(() => {
     if (open) setD(project ? { ...project } : blank);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -233,7 +235,7 @@ function ProjectSheet({ open, project, onClose }: { open: boolean; project?: Pro
         </Field>
         <Field label="Category">
           <select className="field" value={d.category} onChange={(e) => set("category", e.target.value)}>
-            {CATEGORIES.map((c) => (
+            {CATEGORY_NAMES.map((c) => (
               <option key={c}>{c}</option>
             ))}
           </select>

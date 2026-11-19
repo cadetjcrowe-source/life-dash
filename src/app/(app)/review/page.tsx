@@ -5,7 +5,8 @@ import { IconChevronLeft, IconChevronRight } from "@/components/Icons";
 import { toast } from "@/components/Toast";
 import { Button, Card, CardTitle, Empty, Field, IconButton, PageHeader, Progress, Skeleton, cx } from "@/components/ui";
 import { api, refresh, useReview, useReviews } from "@/lib/client";
-import { CATEGORIES, CREATIVE_TYPES, categoryColor } from "@/lib/constants";
+import { CREATIVE_TYPES } from "@/lib/constants";
+import { categoryColor, useCategoryNames } from "@/lib/categories";
 import { addDays, formatDayMonth, weekStart } from "@/lib/dates";
 import { useToday } from "@/lib/useToday";
 
@@ -27,6 +28,7 @@ export default function ReviewPage() {
   const [week, setWeek] = useState(thisWeek);
   const { data, isLoading } = useReview(week);
   const { data: past } = useReviews();
+  const CATEGORY_NAMES = useCategoryNames();
 
   const [wentWell, setWentWell] = useState("");
   const [didnt, setDidnt] = useState("");
@@ -88,12 +90,12 @@ export default function ReviewPage() {
                 <div className="mt-4">
                   <p className="mb-2 text-[14px] font-medium text-muted">Tasks by category</p>
                   <div className="flex h-3 gap-[2px] overflow-hidden rounded-full">
-                    {CATEGORIES.filter((c) => s.tasksByCategory[c]).map((c) => (
+                    {[...CATEGORY_NAMES, ...Object.keys(s.tasksByCategory).filter((k) => !CATEGORY_NAMES.includes(k))].filter((c) => s.tasksByCategory[c]).map((c) => (
                       <span key={c} title={`${c}: ${s.tasksByCategory[c]}`} style={{ flex: s.tasksByCategory[c], background: categoryColor(c).dot }} />
                     ))}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[13px]">
-                    {CATEGORIES.filter((c) => s.tasksByCategory[c]).map((c) => (
+                    {[...CATEGORY_NAMES, ...Object.keys(s.tasksByCategory).filter((k) => !CATEGORY_NAMES.includes(k))].filter((c) => s.tasksByCategory[c]).map((c) => (
                       <span key={c} className="flex items-center gap-1.5">
                         <span className="h-2 w-2 rounded-full" style={{ background: categoryColor(c).dot }} />
                         {c} <span className="text-muted">{s.tasksByCategory[c]}</span>

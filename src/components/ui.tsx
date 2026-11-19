@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { categoryColor } from "@/lib/constants";
+import { categoryColor } from "@/lib/categories";
 import { IconClose } from "./Icons";
 
 export function cx(...c: (string | false | null | undefined)[]) {
@@ -120,6 +120,38 @@ export function Segmented<T extends string | number>({
           {o.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+/** iOS-style on/off switch. */
+export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={cx("relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors", checked ? "bg-good" : "bg-faint/40")}
+    >
+      <span
+        className="absolute left-[2px] top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.2)] transition-transform"
+        style={{ transform: checked ? "translateX(20px)" : "none" }}
+      />
+    </button>
+  );
+}
+
+/** A settings row: label + optional description on the left, a control on the right. */
+export function SettingRow({ title, description, children }: { title: ReactNode; description?: ReactNode; children: ReactNode }) {
+  return (
+    <div className="flex min-h-14 items-center justify-between gap-3 py-2">
+      <div className="min-w-0">
+        <div className="text-[16px]">{title}</div>
+        {description && <div className="text-[13px] text-muted">{description}</div>}
+      </div>
+      {children}
     </div>
   );
 }

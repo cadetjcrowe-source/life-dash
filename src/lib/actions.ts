@@ -2,14 +2,14 @@
 
 // All client-side mutations, each applied optimistically to the SWR cache.
 import { mutate } from "swr";
-import type { CalEvent, HabitEntry, InboxItem, JournalEntry, Project, Settings, Task } from "@/db/schema";
+import type { CalEvent, Category, HabitEntry, InboxItem, JournalEntry, KitItem, KitList, Project, Settings, ShotIdea, Task } from "@/db/schema";
 import { api, optimistic, refresh, uid } from "./client";
 import { addDays, today } from "./dates";
 
 const now = () => new Date();
 
 // ── Tasks ──────────────────────────────────────────────────
-export type TaskDraft = Pick<Task, "title"> & Partial<Pick<Task, "notes" | "dueDate" | "priority" | "category" | "pinned">>;
+export type TaskDraft = Pick<Task, "title"> & Partial<Pick<Task, "notes" | "dueDate" | "priority" | "category" | "pinned" | "isAssignment">>;
 
 function localTask(d: TaskDraft, id: string): Task {
   return {
@@ -20,6 +20,7 @@ function localTask(d: TaskDraft, id: string): Task {
     priority: d.priority ?? 2,
     category: d.category ?? "Personal",
     pinned: d.pinned ?? false,
+    isAssignment: d.isAssignment ?? false,
     done: false,
     completedOn: null,
     createdAt: now(),
@@ -185,6 +186,130 @@ export async function saveJournal(date: string, patch: { mood?: number | null; b
 }
 
 // ── Settings ───────────────────────────────────────────────
-export function saveSettings(patch: Partial<Settings>) {
-  return optimistic<Settings>("/api/settings", (s) => ({ ...s, ...patch }), () => api("/api/settings", "PUT", patch));
+export type SettingsPatch = Omit<Partial<Settings>, "features"> & { features?: Partial<Settings["features"]> };
+
+export function saveSettings(patch: SettingsPatch) {
+  return optimistic<Settings>(
+    "/api/settings",
+    (s) => ({ ...s, ...patch, features: { ...s.features, ...(patch.features ?? {}) } }),
+    () => api("/api/settings", "PUT", patch),
+  );
+}
+
+// ── Shot ideas ─────────────────────────────────────────────
+export type ShotDraft = Pick<ShotIdea, "title"> &
+  Partial<Pick<ShotIdea, "description" | "location" | "bestTime" | "link" | "imageUrl" | "tags">>;
+
+export function addShot(d: ShotDraft) {
+  const id = uid();
+  const row: ShotIdea = {
+    id,
+    description: "",
+    location: "",
+    bestTime: "any",
+    link: "",
+    imageUrl: "",
+    tags: [],
+    shot: false,
+    shotOn: null,
+    createdAt: now(),
+    updatedAt: now(),
+    ...d,
+  };
+  return optimistic<ShotIdea[]>("/api/shots", (l = []) => [row, ...l], () => api("/api/shots", "POST", { ...d, id }));
+}
+
+export function updateShot(id: string, patch: Partial<ShotDraft> & { shot?: boolean }) {
+  const extra = patch.shot === undefined ? {} : { shotOn: patch.shot ? today() : null };
+  return optimistic<ShotIdea[]>(
+    "/api/shots",
+    (l = []) => l.map((s) => (s.id === id ? { ...s, ...patch, ...extra } : s)),
+    () => api(`/api/shots/${id}`, "PATCH", patch),
+  );
+}
+
+export function deleteShot(id: string) {
+  return optimistic<ShotIdea[]>("/api/shots", (l = []) => l.filter((s) => s.id !== id), () => api(`/api/shots/${id}`, "DELETE"));
+}
+
+// ── Kit lists ──────────────────────────────────────────────
+type Kit = { lists: KitList[]; items: KitItem[] };
+const KIT = "/api/kit";
+
+export function addKitList(name: string, emoji = "🎒") {
+  const id = uid();
+  return optimistic<Kit>(
+    KIT,
+    (k = { lists: [], items: [] }) => ({ ...k, lists: [...k.lists, { id, name, emoji, sortOrder: k.lists.length, createdAt: now() }] }),
+    () => api("/api/kit/lists", "POST", { id, name, emoji }),
+  );
+}
+
+export function updateKitList(id: string, patch: { name?: string; emoji?: string }) {
+  return optimistic<Kit>(KIT, (k) => ({ ...k, lists: k.lists.map((l) => (l.id === id ? { ...l, ...patch } : l)) }), () => api(`/api/kit/lists/${id}`, "PATCH", patch));
+}
+
+export function deleteKitList(id: string) {
+  return optimistic<Kit>(
+    KIT,
+    (k) => ({ lists: k.lists.filter((l) => l.id !== id), items: k.items.filter((i) => i.listId !== id) }),
+    () => api(`/api/kit/lists/${id}`, "DELETE"),
+  );
+}
+
+/** One-tap reset: untick everything in a list. */
+export function resetKitList(id: string) {
+  return optimistic<Kit>(
+    KIT,
+    (k) => ({ ...k, items: k.items.map((i) => (i.listId === id ? { ...i, checked: false } : i)) }),
+    () => api(`/api/kit/lists/${id}`, "POST", { action: "reset" }),
+  );
+}
+
+export function addKitItem(listId: string, text: string) {
+  const id = uid();
+  return optimistic<Kit>(
+    KIT,
+    (k) => ({ ...k, items: [...k.items, { id, listId, text, checked: false, sortOrder: k.items.filter((i) => i.listId === listId).length, createdAt: now() }] }),
+    () => api("/api/kit/items", "POST", { id, listId, text }),
+  );
+}
+
+export function updateKitItem(id: string, patch: { text?: string; checked?: boolean }) {
+  return optimistic<Kit>(KIT, (k) => ({ ...k, items: k.items.map((i) => (i.id === id ? { ...i, ...patch } : i)) }), () => api(`/api/kit/items/${id}`, "PATCH", patch));
+}
+
+export function deleteKitItem(id: string) {
+  return optimistic<Kit>(KIT, (k) => ({ ...k, items: k.items.filter((i) => i.id !== id) }), () => api(`/api/kit/items/${id}`, "DELETE"));
+}
+
+// ── Categories ─────────────────────────────────────────────
+const CATS = "/api/categories";
+
+export function addCategory(name: string, color: string) {
+  const id = uid();
+  return optimistic<Category[]>(
+    CATS,
+    (l = []) => [...l, { id, name, color, sortOrder: l.length, createdAt: now() }],
+    () => api(CATS, "POST", { id, name, color }),
+  );
+}
+
+/** Renaming also updates every task, event and project in that category. */
+export async function updateCategory(id: string, patch: { name?: string; color?: string }) {
+  await optimistic<Category[]>(CATS, (l = []) => l.map((c) => (c.id === id ? { ...c, ...patch } : c)), () => api(`${CATS}/${id}`, "PATCH", patch));
+  if (patch.name) ["/api/tasks", "/api/events", "/api/projects"].forEach(refresh);
+}
+
+export async function deleteCategory(id: string) {
+  await optimistic<Category[]>(CATS, (l = []) => l.filter((c) => c.id !== id), () => api(`${CATS}/${id}`, "DELETE"));
+  ["/api/tasks", "/api/events", "/api/projects"].forEach(refresh);
+}
+
+export function reorderCategories(ids: string[]) {
+  return optimistic<Category[]>(
+    CATS,
+    (l = []) => ids.map((id, i) => ({ ...l.find((c) => c.id === id)!, sortOrder: i })).filter((c) => c.id),
+    () => api(`${CATS}/reorder`, "POST", { ids }),
+  );
 }

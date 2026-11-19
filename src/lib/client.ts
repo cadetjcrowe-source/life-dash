@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR, { mutate as globalMutate, type SWRConfiguration } from "swr";
-import type { CalEvent, HabitEntry, InboxItem, JournalEntry, Project, Settings, Task, WeeklyReview } from "@/db/schema";
+import type { CalEvent, HabitEntry, InboxItem, JournalEntry, KitItem, KitList, Project, Settings, ShotIdea, Task, WeeklyReview } from "@/db/schema";
 import type { Weather } from "./weather";
 import { toast } from "@/components/Toast";
 
@@ -78,6 +78,10 @@ export const useSettings = () => useSWR<Settings>("/api/settings");
 export const useHabits = (from: string, to: string) => useSWR<HabitEntry[]>(`/api/habits?from=${from}&to=${to}`);
 export const useJournalList = (q: string) => useSWR<JournalEntry[]>(`/api/journal?q=${encodeURIComponent(q)}`);
 export const useJournalEntry = (date: string) => useSWR<JournalEntry | null>(`/api/journal/${date}`);
+export const useShots = () => useSWR<ShotIdea[]>("/api/shots");
+export type KitData = { lists: KitList[]; items: KitItem[] };
+export const useKit = () => useSWR<KitData>("/api/kit");
+export const usePixels = (year: number) => useSWR<import("./pixels").PixelYear>(`/api/pixels?year=${year}`, { refreshInterval: 60_000 });
 export const useReviews = () => useSWR<WeeklyReview[]>("/api/reviews");
 export const useWeather = () =>
   useSWR<Weather>("/api/weather", { refreshInterval: 15 * 60_000, revalidateOnFocus: false });

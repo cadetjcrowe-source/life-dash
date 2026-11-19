@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import type { Task } from "@/db/schema";
 import { addTask, deleteTask, updateTask, type TaskDraft } from "@/lib/actions";
-import { CATEGORIES, PRIORITIES, categoryColor } from "@/lib/constants";
+import { PRIORITIES } from "@/lib/constants";
+import { categoryColor, useCategoryNames } from "@/lib/categories";
 import { addDays, relativeDay } from "@/lib/dates";
 import { useToday } from "@/lib/useToday";
 import { IconPin } from "./Icons";
@@ -30,6 +31,7 @@ export function TaskRow({ task, onEdit, compact }: { task: Task; onEdit: (t: Tas
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] text-muted">
           {task.dueDate && <span className={cx(overdue && "font-medium text-danger")}>{relativeDay(task.dueDate, today)}</span>}
           {task.priority === 3 && <span className="font-medium text-warn">High</span>}
+          {task.isAssignment && <span className="font-medium text-accent">📚 Assignment</span>}
           {!compact && <CategoryChip category={task.category} />}
           {compact && (
             <span className="inline-flex items-center gap-1.5">
@@ -43,7 +45,7 @@ export function TaskRow({ task, onEdit, compact }: { task: Task; onEdit: (t: Tas
   );
 }
 
-const empty = (due: string | null): TaskDraft => ({ title: "", notes: "", dueDate: due, priority: 2, category: "Personal", pinned: false });
+const empty = (due: string | null): TaskDraft => ({ title: "", notes: "", dueDate: due, priority: 2, category: "Personal", pinned: false, isAssignment: false });
 
 export function TaskSheet({
   open,
@@ -58,6 +60,7 @@ export function TaskSheet({
 }) {
   const today = useToday();
   const [d, setD] = useState<TaskDraft>(empty(defaultDue));
+  const CATEGORY_NAMES = useCategoryNames();
   useEffect(() => {
     if (open) setD(task ? { ...task } : empty(defaultDue));
   }, [open, task, defaultDue]);
@@ -65,7 +68,7 @@ export function TaskSheet({
   const set = <K extends keyof TaskDraft>(k: K, v: TaskDraft[K]) => setD((s) => ({ ...s, [k]: v }));
   const save = () => {
     if (!d.title.trim()) return;
-    const payload = { title: d.title.trim(), notes: d.notes, dueDate: d.dueDate || null, priority: d.priority, category: d.category, pinned: d.pinned };
+    const payload = { title: d.title.trim(), notes: d.notes, dueDate: d.dueDate || null, priority: d.priority, category: d.category, pinned: d.pinned, isAssignment: d.isAssignment };
     if (task) updateTask(task.id, payload);
     else addTask(payload);
     onClose();
@@ -140,7 +143,7 @@ export function TaskSheet({
         </Field>
         <Field label="Category">
           <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((c) => {
+            {CATEGORY_NAMES.map((c) => {
               const col = categoryColor(c);
               const on = d.category === c;
               return (
@@ -162,6 +165,13 @@ export function TaskSheet({
             <IconPin size={18} className="text-warn" /> Pin to today's top 3
           </span>
           <input type="checkbox" className="h-5 w-5 accent-[var(--accent)]" checked={!!d.pinned} onChange={(e) => set("pinned", e.target.checked)} />
+        </label>
+        <label className="flex min-h-12 items-center justify-between rounded-xl bg-card-2 px-4">
+          <span>
+            📚 It's an assignment
+            <span className="block text-[13px] text-muted">Shows a days-left countdown on Today</span>
+          </span>
+          <input type="checkbox" className="h-5 w-5 accent-[var(--accent)]" checked={!!d.isAssignment} onChange={(e) => set("isAssignment", e.target.checked)} />
         </label>
         <Field label="Notes">
           <textarea className="field min-h-24" value={d.notes ?? ""} onChange={(e) => set("notes", e.target.value)} placeholder="Optional" />
