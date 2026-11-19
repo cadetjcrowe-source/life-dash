@@ -1,0 +1,423 @@
+@import "tailwindcss";
+@import "./motion.css";
+
+/* ── Design tokens ─────────────────────────────────────────── */
+:root {
+  --bg: #f2f2f7;
+  --card: #ffffff;
+  --card-2: #f5f5f8;
+  --text: #1c1c1e;
+  --muted: #6e6e73;
+  --faint: #aeaeb2;
+  --line: rgba(60, 60, 67, 0.12);
+  --accent: #5e5ce6;
+  --accent-soft: rgba(94, 92, 230, 0.12);
+  --accent-text: #ffffff;
+  --good: #2fae5b;
+  --good-soft: rgba(47, 174, 91, 0.14);
+  --warn: #d98a1f;
+  --warn-soft: rgba(217, 138, 31, 0.14);
+  --danger: #e5484d;
+  --danger-soft: rgba(229, 72, 77, 0.12);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.18);
+  --blur-bg: rgba(249, 249, 251, 0.82);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --card: #1c1c1e;
+    --card-2: #2c2c2e;
+    --text: #f5f5f7;
+    --muted: #98989f;
+    --faint: #636366;
+    --line: rgba(84, 84, 88, 0.48);
+    --accent: #7d7aff;
+    --accent-soft: rgba(125, 122, 255, 0.18);
+    --good: #3ccf6e;
+    --good-soft: rgba(60, 207, 110, 0.16);
+    --warn: #f0a640;
+    --warn-soft: rgba(240, 166, 64, 0.16);
+    --danger: #ff6369;
+    --danger-soft: rgba(255, 99, 105, 0.16);
+    --shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+    --blur-bg: rgba(22, 22, 24, 0.8);
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-card-2: var(--card-2);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --shadow-card: var(--shadow);
+  --shadow-float: var(--shadow-lg);
+  --radius-card: 20px;
+  /* Every `transition` utility uses SwiftUI's .snappy spring by default. */
+  --default-transition-timing-function: var(--spring-snappy);
+  --default-transition-duration: var(--dur-snappy);
+}
+
+/* ── Base (layered so Tailwind utilities can override) ─────── */
+@layer base {
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+input,
+textarea,
+select,
+button {
+  font: inherit;
+  color: inherit;
+}
+/* ≥16px stops iOS zooming into fields */
+input,
+textarea,
+select {
+  font-size: 17px;
+}
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+::selection {
+  background: var(--accent-soft);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+}
+
+/* Safe-area helpers */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pb-tabbar {
+  padding-bottom: calc(84px + env(safe-area-inset-bottom));
+}
+@media (min-width: 768px) {
+  .pb-tabbar {
+    padding-bottom: 48px;
+  }
+}
+
+@layer components {
+.glass {
+  background: var(--blur-bg);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.field {
+  width: 100%;
+  background: var(--card-2);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 12px 14px;
+  min-height: 48px;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.field:focus {
+  border-color: var(--accent);
+  background: var(--card);
+}
+.field::placeholder {
+  color: var(--faint);
+}
+select.field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+input[type="date"].field,
+input[type="time"].field {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+}
+
+/* ── Motion ────────────────────────────────────────────────
+   Modelled on SwiftUI (developer.apple.com/documentation/swiftui/animations).
+   Springs are real spring physics (see motion.css / scripts/gen-springs.mjs):
+     .smooth      no bounce   → sheets, layout, progress, content moving in
+     .snappy      small bounce→ default for UI state changes
+     .bouncy      more bounce → playful moments: ticking habits, celebrations
+     .interactive fast        → direct touch feedback (press)
+   Transitions mirror SwiftUI's AnyTransition: .opacity, .move(edge:),
+   .push(from:), .scale.combined(with: .opacity), and .asymmetric for exits.
+   State changes use CSS transitions (interruptible: a new target retargets
+   from the current value, like SwiftUI springs replacing their predecessor). */
+
+/* Press feedback: interactive spring in, bouncy spring back out (like a UIButton). */
+.press {
+  transition:
+    transform var(--dur-bouncy) var(--spring-bouncy),
+    background-color var(--dur-snappy) var(--spring-snappy),
+    color var(--dur-snappy) var(--spring-snappy),
+    opacity var(--dur-snappy) var(--spring-snappy),
+    box-shadow var(--dur-snappy) var(--spring-snappy),
+    border-color var(--dur-snappy) var(--spring-snappy);
+}
+.press:active {
+  transform: scale(0.96);
+  transition-timing-function: var(--spring-interactive);
+  transition-duration: var(--dur-interactive);
+}
+.press-strong:active {
+  transform: scale(0.88);
+}
+.press-subtle:active {
+  transform: scale(0.985);
+}
+
+/* Value changes (progress bars, rings, bar heights) use .smooth */
+.spring-smooth {
+  transition-timing-function: var(--spring-smooth) !important;
+  transition-duration: var(--dur-smooth) !important;
+}
+
+@keyframes push-in {
+  /* .push(from: .bottom) – moves in while fading */
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes scale-in {
+  /* .scale(0.5).combined(with: .opacity) */
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+@keyframes scale-fade-in {
+  /* .scale(0.94).combined(with: .opacity) – desktop dialogs */
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+@keyframes scale-fade-out {
+  to {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+@keyframes move-in-bottom {
+  /* .move(edge: .bottom) – sheets */
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes move-out-bottom {
+  to {
+    transform: translateY(100%);
+  }
+}
+@keyframes move-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(-120%);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes ring {
+  from {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+/* SF Symbols .bounce effect: dip, then spring back past rest */
+@keyframes symbol-bounce {
+  0% {
+    transform: scale(1);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+  25% {
+    transform: scale(0.8);
+    animation-timing-function: var(--spring-bouncy);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+/* .contentTransition(.numericText()) – digits roll in, slightly blurred */
+@keyframes numeric-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.5em);
+    filter: blur(2px);
+  }
+}
+@keyframes numeric-down {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5em);
+    filter: blur(2px);
+  }
+}
+@keyframes confetti {
+  0% {
+    transform: translate(0, 0) rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+
+/* Cards & rows appearing: .push(from: .bottom) with .smooth */
+.anim-rise {
+  animation: push-in var(--dur-smooth) var(--spring-smooth) both;
+}
+/* Ticked checkbox: .scale + .bouncy */
+.anim-pop {
+  animation: scale-in var(--dur-bouncy) var(--spring-bouncy) both;
+}
+.anim-draw {
+  stroke-dasharray: 24;
+  animation: draw var(--dur-snappy) var(--spring-snappy) both;
+  animation-delay: 60ms;
+}
+.anim-ring {
+  animation: ring var(--dur-smooth) var(--spring-smooth) forwards;
+}
+.anim-symbol {
+  animation: symbol-bounce var(--dur-bouncy) both;
+}
+.anim-num-up {
+  display: inline-block;
+  animation: numeric-up var(--dur-snappy) var(--spring-snappy) both;
+}
+.anim-num-down {
+  display: inline-block;
+  animation: numeric-down var(--dur-snappy) var(--spring-snappy) both;
+}
+.anim-toast {
+  animation: move-in-top var(--dur-snappy) var(--spring-snappy) both;
+}
+.anim-toast-out {
+  animation: fade-out var(--dur-quick) var(--spring-quick) both;
+}
+.anim-fade {
+  animation: fade-in var(--dur-quick) var(--spring-quick) both;
+}
+.anim-fade-out {
+  animation: fade-out var(--dur-quick) var(--spring-quick) both;
+}
+/* Sheets: .move(edge: .bottom) with .smooth – iOS sheets don't bounce.
+   Exit is asymmetric and a little quicker. */
+.anim-sheet {
+  animation: move-in-bottom var(--dur-smooth) var(--spring-smooth) both;
+}
+.anim-sheet-out {
+  animation: move-out-bottom var(--dur-quick) var(--spring-quick) both;
+}
+@media (min-width: 768px) {
+  .anim-sheet {
+    animation: scale-fade-in var(--dur-snappy) var(--spring-snappy) both;
+  }
+  .anim-sheet-out {
+    animation: scale-fade-out var(--dur-quick) var(--spring-quick) both;
+  }
+}
+
+/* Reduce Motion: replace movement with simple dissolves (Apple HIG),
+   keep opacity changes so state is still communicated. */
+@media (prefers-reduced-motion: reduce) {
+  .anim-rise,
+  .anim-pop,
+  .anim-sheet,
+  .anim-toast,
+  .anim-num-up,
+  .anim-num-down {
+    animation: fade-in var(--dur-quick) ease both;
+  }
+  .anim-sheet-out {
+    animation: fade-out var(--dur-quick) ease both;
+  }
+  .anim-symbol,
+  .anim-ring,
+  .anim-draw {
+    animation: none;
+  }
+  .press:active,
+  .press-strong:active,
+  .press-subtle:active {
+    transform: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.15s !important;
+    transition-timing-function: ease !important;
+  }
+  [style*="confetti"] {
+    display: none;
+  }
+}
