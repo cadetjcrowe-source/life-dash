@@ -3,7 +3,8 @@ import { eq } from "drizzle-orm";
 import * as webpush from "web-push";
 import { db, schema } from "@/db";
 import { today as londonToday } from "./dates";
-import { getSettings } from "./settings";
+import { getLocation, getSettings } from "./settings";
+import { shortName } from "./location";
 import { fmtTime, goldenStatus, sunDay } from "./sun";
 import { topThree } from "./tasks";
 import { describe } from "./weather";
@@ -50,18 +51,19 @@ export async function sendToAll(payload: PushPayload): Promise<{ sent: number; r
 /** "Good morning" summary: weather, golden hour and top 3 tasks. */
 export async function buildMorningSummary(): Promise<PushPayload> {
   const t = londonToday();
-  const [weather, tasks, settings] = await Promise.all([getWeather(), db().select().from(schema.tasks).where(eq(schema.tasks.done, false)), getSettings()]);
+  const place = await getLocation();
+  const [weather, tasks, settings] = await Promise.all([getWeather(place), db().select().from(schema.tasks).where(eq(schema.tasks.done, false)), getSettings()]);
 
   const lines: string[] = [];
   if (weather) {
     const d = describe(weather.current.code, weather.current.isDay);
     const today = weather.daily[0];
-    lines.push(`${d.icon} ${Math.round(weather.current.temp)}° ${d.label.toLowerCase()}${today ? `, high ${Math.round(today.max)}°` : ""}${weather.outside.good ? " · good to be outside" : ""}`);
+    lines.push(`${d.icon} ${Math.round(weather.current.temp)}° in ${shortName(place.name)}, ${d.label.toLowerCase()}${today ? `, high ${Math.round(today.max)}°` : ""}${weather.outside.good ? " · good to be outside" : ""}`);
   }
   if (settings.features.golden) {
-    const day = sunDay(t);
+    const day = sunDay(t, place);
     const evening = day.windows.find((w) => w.kind === "evening");
-    const g = goldenStatus(t);
+    const g = goldenStatus(t, new Date(), place);
     if (evening) lines.push(`🌇 Golden hour ${fmtTime(evening.start)}–${fmtTime(evening.end)} · sunset ${fmtTime(day.sunset)}`);
     else if (g.state === "next") lines.push(`🌅 Next golden hour ${fmtTime(g.window.start)}`);
   }

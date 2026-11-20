@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import type { Category } from "@/db/schema";
-import { IconBell, IconChevronDown, IconChevronRight, IconChevronUp, IconClose, IconDownload, IconLogout, IconPlus } from "@/components/Icons";
+import { IconBell, IconMapPin, IconSearch, IconChevronDown, IconChevronRight, IconChevronUp, IconClose, IconDownload, IconLogout, IconPlus } from "@/components/Icons";
 import { toast } from "@/components/Toast";
 import { Button, Card, CardTitle, Field, IconButton, PageHeader, Segmented, SettingRow, Switch, cx } from "@/components/ui";
 import { addCategory, deleteCategory, reorderCategories, saveSettings, updateCategory } from "@/lib/actions";
 import { useCategoriesQuery } from "@/lib/categories";
 import { api, useSettings } from "@/lib/client";
 import { CATEGORY_SWATCHES, DEFAULT_SETTINGS, FEATURES, TODAY_CARDS } from "@/lib/constants";
+import { searchCities, useLocation, type CityResult } from "@/lib/location-client";
+import { DEFAULT_PLACE, shortName } from "@/lib/location";
+import { relativeDay, today as londonToday, toLondonDate } from "@/lib/dates";
 import { currentSubscription, disablePush, enablePush, isIOS, isStandalone, pushSupported, type PushInfo } from "@/lib/push-client";
 
 function move<T>(arr: T[], i: number, dir: -1 | 1): T[] {
@@ -66,6 +69,8 @@ export default function SettingsPage() {
             })}
           </ul>
         </Card>
+
+        <LocationCard />
 
         <Card>
           <CardTitle>Features</CardTitle>
@@ -417,6 +422,110 @@ function MorningCard() {
               Send a test
             </Button>
           </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function LocationCard() {
+  const { data } = useSettings();
+  const s = data ?? DEFAULT_SETTINGS;
+  const { place, status, refresh } = useLocation();
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<CityResult[] | null>(null);
+  const [searching, setSearching] = useState(false);
+
+  // Search as you type (debounced).
+  useEffect(() => {
+    const term = q.trim();
+    if (term.length < 2) return setResults(null);
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        setResults(await searchCities(term));
+      } catch (e) {
+        toast(e instanceof Error ? e.message : "Search failed");
+      }
+      setSearching(false);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  const last = s.lastLocation;
+  const lastSeen = last
+    ? `${toLondonDate(last.at) === londonToday() ? "today" : relativeDay(toLondonDate(last.at)).toLowerCase()} at ${new Date(last.at).toLocaleTimeString("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit" })}`
+    : null;
+
+  return (
+    <Card>
+      <CardTitle icon={<IconMapPin size={18} />}>Location</CardTitle>
+      <p className="mb-3 text-[14px] text-muted">Used for the weather, golden hour and the morning summary.</p>
+      <Segmented
+        value={s.locationMode}
+        onChange={async (v) => {
+          await saveSettings({ locationMode: v });
+          // Weather is worked out on the server from the saved mode, so refetch once it's saved.
+          await mutate("/api/weather");
+          if (v === "current") refresh();
+        }}
+        options={[
+          { value: "current", label: "Current location" },
+          { value: "fixed", label: "Fixed location" },
+        ]}
+      />
+
+      <div className="mt-3 rounded-2xl bg-card-2 p-3.5">
+        <p className="text-[13px] font-medium text-muted">Now showing</p>
+        <p className="text-[18px] font-semibold">{shortName(place.name)}</p>
+        <p className="text-[13px] text-muted">
+          {place.source === "fixed"
+            ? place.name
+            : place.source === "device"
+              ? `Last updated ${lastSeen}${status === "denied" ? " · location access is off" : ""}`
+              : status === "denied"
+                ? "Location access is off, so using the default (Ramsey)"
+                : "Default — no location saved yet"}
+        </p>
+      </div>
+
+      {s.locationMode === "current" ? (
+        <Button variant="secondary" className="mt-3 w-full" disabled={status === "locating"} onClick={() => refresh()}>
+          <IconMapPin size={18} /> {status === "locating" ? "Finding you…" : "Refresh location"}
+        </Button>
+      ) : (
+        <div className="mt-3">
+          <label className="relative block">
+            <IconSearch size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-faint" />
+            <input className="field pl-10" type="search" placeholder="Search for a town or city" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search for a city" />
+          </label>
+          {searching && <p className="mt-2 text-[14px] text-muted">Searching…</p>}
+          {results && !searching && (
+            <ul className="mt-2 divide-y divide-line overflow-hidden rounded-2xl bg-card-2">
+              {results.length === 0 ? (
+                <li className="p-3 text-[15px] text-muted">No places found</li>
+              ) : (
+                results.map((r) => (
+                  <li key={`${r.lat},${r.lon}`}>
+                    <button
+                      className="press press-subtle flex min-h-12 w-full flex-col justify-center px-3.5 py-2 text-left"
+                      onClick={async () => {
+                        await saveSettings({ fixedLocation: { lat: r.lat, lon: r.lon, name: r.name } });
+                        refresh();
+                        setQ("");
+                        setResults(null);
+                        toast(`📍 Using ${shortName(r.name)}`);
+                      }}
+                    >
+                      <span className="text-[16px] font-medium">{shortName(r.name)}</span>
+                      <span className="text-[13px] text-muted">{r.detail}</span>
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
+          {!s.fixedLocation && <p className="mt-2 text-[13px] text-muted">Until you pick a place, your last known location is used ({shortName((last ?? DEFAULT_PLACE).name)}).</p>}
         </div>
       )}
     </Card>

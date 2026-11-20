@@ -142,6 +142,9 @@ export type TodayCardId = "weather" | "golden" | "assignments" | "events" | "tas
 export type GymExercise = { id: string; name: string; sets: number; reps: string; notes: string };
 export type GymDay = { id: string; name: string; focus: string; exercises: GymExercise[] };
 
+export type Place = { lat: number; lon: number; name: string };
+export type SavedPlace = Place & { at: string; accuracy: number | null };
+
 export type Settings = {
   sleepTarget: number;
   waterTarget: number;
@@ -156,6 +159,9 @@ export type Settings = {
   pushTime: string; // "HH:MM" Europe/London
   pushLastSent: string | null; // YYYY-MM-DD
   pushPrecisePingAt: string | null; // ISO – last time the 15-minute pinger called in
+  locationMode: "current" | "fixed";
+  fixedLocation: Place | null; // chosen via city search in Settings
+  lastLocation: SavedPlace | null; // last device location reported by the app
 };
 
 export const settings = pgTable("settings", {

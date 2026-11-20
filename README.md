@@ -10,7 +10,7 @@ Jacob's day at a glance: weather for Ramsey, today's events, top 3 tasks, habits
 
 | Screen | What it does |
 | --- | --- |
-| **Today** | Greeting and date. Ramsey weather with an hourly and 4-day forecast, a "good to be outside" flag (dry, light wind, good visibility) and a "calm enough to fly" drone flag. **Golden hour**: sunrise, sunset, the morning and evening golden hours, and a live countdown to the next one. **Assignment countdowns**: big "X days left" cards, amber at 7 days and red at 2. Also today's events, your top 3 tasks, today's habits, and a quick-capture box that saves to an inbox. You choose and order the cards in Settings. |
+| **Today** | Greeting and date. Weather **for where you are** (with a 📍 place name, e.g. "Douglas"; tap the pin to refresh) with an hourly and 4-day forecast, a "good to be outside" flag (dry, light wind, good visibility) and a "calm enough to fly" drone flag. **Golden hour** for your location: sunrise, sunset, the morning and evening golden hours, and a live countdown to the next one. **Assignment countdowns**: big "X days left" cards, amber at 7 days and red at 2. Also today's events, your top 3 tasks, today's habits, and a quick-capture box that saves to an inbox. You choose and order the cards in Settings. |
 | **Tasks** | Add/edit/complete tasks with a due date, priority and category, and mark any task as an **assignment**. Grouped into Overdue / Today / This week / Later, with category filters. Inbox items become tasks in one tap. |
 | **Calendar** | Day timeline (with a "now" line) and week view. Events repeat daily, weekly, fortnightly or monthly, with an optional end date, and you can skip a single occurrence. |
 | **Habits** | Water (tap +1 glass), sleep hours, creative practice (music / editing / photography, with minutes). Streaks and a 7-day chart for each. **Gym** is low-pressure: no streaks and no shaming, it celebrates every session, shows sessions this month, and has an optional gentle nudge you can switch off. |
@@ -22,7 +22,7 @@ Jacob's day at a glance: weather for Ramsey, today's events, top 3 tasks, habits
 | **Gym plan** | An editable beginner routine: 3 full-body days, each with sets, reps and how-to notes. It suggests which day is next and celebrates every session. Shows sessions this month, with no streaks and no guilt. |
 | **Year in pixels** | Every day of the year as a square, coloured by journal mood or by a productivity score (switchable). Tap a day to see its journal entry and stats. |
 | **Morning summary** | An optional push notification each morning with the weather, golden hour and your top 3 tasks. Works on the installed iPhone app (iOS 16.4+). |
-| **Settings** | **Categories**: add, rename, recolour, reorder and delete them (a rename updates everything using it). **Feature switches** for each extra. **Today card order and visibility.** Also shot tags, pixels colour mode, habit targets, morning notification time, **Export all data (JSON)**, and sign out. |
+| **Settings** | **Location**: use your current location or a fixed place (city search), plus a Refresh location button. **Categories**: add, rename, recolour, reorder and delete them (a rename updates everything using it). **Feature switches** for each extra. **Today card order and visibility.** Also shot tags, pixels colour mode, habit targets, morning notification time, **Export all data (JSON)**, and sign out. |
 
 All "today", "this week" and streak calculations use **Europe/London**.
 
@@ -144,6 +144,21 @@ To change the schema, edit `src/db/schema.ts`, run `npm run db:generate`, and co
 
 ---
 
+## Location
+
+Weather, golden hour and the morning summary follow **your location**:
+
+1. **Asking first.** The first time, the weather card asks politely ("Weather for where you are?"). The phone's own permission prompt only appears after you tap **Use my location**. **Not now** hides the question for a week.
+2. **Battery-friendly.** The app checks your position when it opens or comes back to the foreground, at most every **30 minutes**, using low-power positioning. A new location is saved (and its name looked up) only if you've moved **more than 3 km** or the saved one is over 30 minutes old. Tapping the 📍 pin, or **Settings → Location → Refresh location**, gets a fresh fix straight away.
+3. **Place names** come from BigDataCloud's free reverse-geocoding service, with OpenStreetMap Nominatim as a backup. Neither needs a key.
+4. **Saved to your database.** Your last known location is stored in your settings, so server-side features use it too: the weather API, golden hour and the morning notification.
+5. **Fallbacks.** If location is off or unavailable, the app uses your **last saved location**, then **Ramsey, Isle of Man** (54.32, −4.38).
+6. **Fixed location.** In **Settings → Location**, choose **Fixed location** and search for a town or city (Open-Meteo geocoding). Everything then uses that place until you switch back.
+
+All times are still shown in UK time (Europe/London), so if you travel abroad, sunrise and golden hour are given in UK time.
+
+No new environment variables or database migrations are needed. Location is kept in the existing settings record.
+
 ## Environment variables
 
 | Variable | Required | What it's for |
@@ -165,9 +180,9 @@ To change the schema, edit `src/db/schema.ts`, run `npm run db:generate`, and co
 - **Sync across devices.** Every change is saved straight to Postgres. Each screen re-fetches when the app comes to the foreground, every 5 s while it's open, and after every change. Something added on your phone shows up on your desktop within a few seconds, no refresh needed.
 - **Instant ticks.** Changes are optimistic: the UI updates immediately and rolls back with a message if the save fails.
 - **Login.** One password, checked against a scrypt hash. A signed, `HttpOnly`, `Secure` session cookie lasts 30 days. Every page and API route except `/login` is protected by `src/proxy.ts`. Failed logins are slowed down.
-- **Golden hour** uses [suncalc](https://github.com/mourner/suncalc) for Ramsey: the morning golden hour runs from sunrise until the sun is 6° up, and the evening one from 6° until sunset (`src/lib/sun.ts`).
+- **Golden hour** uses [suncalc](https://github.com/mourner/suncalc) for your current or fixed location (Ramsey by default): the morning golden hour runs from sunrise until the sun is 6° up, and the evening one from 6° until sunset (`src/lib/sun.ts`).
 - **Productivity score** (Year in pixels): up to 3 points for tasks done, plus a point each for hitting water, sleep, any creative practice and any gym session. That's 7 points, bucketed into 4 levels (`src/lib/pixels.ts`).
-- **Weather** comes from [Open-Meteo](https://open-meteo.com) (no key) for lat 54.32, lon −4.38, cached for 15 minutes. The thresholds are in `src/lib/weather.ts`:
+- **Weather** comes from [Open-Meteo](https://open-meteo.com) (no key) for your location (rounded to about 1 km), cached for 15 minutes. The thresholds are in `src/lib/weather.ts`:
   - **Good to be outside:** no rain now, under a 30% chance in the next 3 hours, wind under 20 km/h, visibility of at least 10 km.
   - **Calm enough to fly:** dry, wind under 25 km/h, gusts under 35 km/h. Always check the IOM CAA rules too.
 - **Design.** System font (SF Pro on Apple devices), automatic light/dark mode, one indigo accent, muted category colours, and respect for the iPhone notch and home bar.

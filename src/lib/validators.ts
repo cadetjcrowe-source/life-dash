@@ -65,6 +65,13 @@ export const reviewInput = z.object({
   top3: z.array(z.string().max(300)).max(3).optional(),
 });
 
+export const place = z.object({
+  lat: z.number().min(-90).max(90),
+  lon: z.number().min(-180).max(180),
+  name: z.string().trim().min(1).max(120),
+});
+export const deviceLocation = place.extend({ accuracy: z.number().min(0).max(100_000).nullable().optional() });
+
 const featureKey = z.enum(["golden", "assignments", "shots", "kit", "gymPlan", "pixels", "morningPush"]);
 const gymExercise = z.object({
   id: z.string().min(1).max(60),
@@ -95,6 +102,8 @@ export const settingsInput = z.object({
   gymPlan: z.array(gymDay).max(7).optional(),
   pushEnabled: z.boolean().optional(),
   pushTime: hm.optional(),
+  locationMode: z.enum(["current", "fixed"]).optional(),
+  fixedLocation: place.nullable().optional(),
 });
 
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "expected a #RRGGBB colour");

@@ -1,6 +1,7 @@
 // Shared (client + server) weather types and helpers.
 
 export type Weather = {
+  location: { name: string; lat: number; lon: number; source: "fixed" | "device" | "default" };
   current: {
     temp: number;
     feelsLike: number;

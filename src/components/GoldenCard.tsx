@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { addDays } from "@/lib/dates";
 import { fmtDuration, fmtTime, goldenStatus, sunDay } from "@/lib/sun";
 import { useToday } from "@/lib/useToday";
+import { useLocation } from "@/lib/location-client";
+import { shortName } from "@/lib/location";
 import { IconSun } from "./Icons";
 import { Card, CardTitle, Skeleton, cx } from "./ui";
 
-/** Sunrise, sunset and golden hours for Ramsey with a live countdown. */
+/** Sunrise, sunset and golden hours for your location, with a live countdown. */
 export function GoldenCard() {
   const today = useToday();
+  const { place } = useLocation();
   // Clock-based, so it renders only in the browser (avoids server/client mismatch).
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
@@ -25,16 +28,18 @@ export function GoldenCard() {
       </Card>
     );
 
-  const day = sunDay(today);
-  const status = goldenStatus(today, now);
+  const day = sunDay(today, place);
+  const status = goldenStatus(today, now, place);
   const morning = day.windows.find((w) => w.kind === "morning");
   const evening = day.windows.find((w) => w.kind === "evening");
-  const tomorrowStarts = sunDay(addDays(today, 1)).windows.map((w) => w.start.getTime());
+  const tomorrowStarts = sunDay(addDays(today, 1), place).windows.map((w) => w.start.getTime());
   const isTomorrow = status.state !== "none" && tomorrowStarts.includes(status.window.start.getTime());
 
   return (
     <Card>
-      <CardTitle icon={<IconSun size={18} />}>Golden hour</CardTitle>
+      <CardTitle icon={<IconSun size={18} />} action={<span className="truncate text-[14px] text-muted">📍 {shortName(place.name)}</span>}>
+        Golden hour
+      </CardTitle>
       <div
         className={cx(
           "rounded-2xl p-4",

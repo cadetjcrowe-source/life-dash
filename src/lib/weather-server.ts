@@ -1,5 +1,5 @@
 import "server-only";
-import { RAMSEY } from "./constants";
+import type { ResolvedPlace } from "./location";
 import { assessDrone, assessOutside, type Weather } from "./weather";
 
 type OM = {
@@ -16,11 +16,14 @@ type OM = {
   };
 };
 
-/** Fetch + interpret the Open-Meteo forecast for Ramsey (cached for 15 minutes). */
-export async function getWeather(): Promise<Weather | null> {
+/**
+ * Fetch + interpret the Open-Meteo forecast for a place (cached for 15 minutes).
+ * Coordinates are rounded to ~1 km so nearby requests share the cache.
+ */
+export async function getWeather(place: ResolvedPlace): Promise<Weather | null> {
   const params = new URLSearchParams({
-    latitude: String(RAMSEY.lat),
-    longitude: String(RAMSEY.lon),
+    latitude: place.lat.toFixed(2),
+    longitude: place.lon.toFixed(2),
     timezone: "Europe/London",
     wind_speed_unit: "kmh",
     forecast_days: "5",
@@ -60,6 +63,7 @@ export async function getWeather(): Promise<Weather | null> {
     const outside = assessOutside(current, next3Rain);
 
     const weather: Weather = {
+      location: { name: place.name, lat: place.lat, lon: place.lon, source: place.source },
       current,
       hourly,
       daily: om.daily.time.map((date, i) => ({

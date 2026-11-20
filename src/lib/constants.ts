@@ -138,6 +138,9 @@ export const DEFAULT_SETTINGS: Settings = {
   pushTime: "07:30",
   pushLastSent: null,
   pushPrecisePingAt: null,
+  locationMode: "current",
+  fixedLocation: null,
+  lastLocation: null,
 };
 
 /** Fill in any settings keys added since the user's settings were first saved. */

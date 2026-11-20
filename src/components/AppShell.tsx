@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { SWRConfig } from "swr";
 import { useEffect } from "react";
 import { CategoriesProvider } from "@/lib/categories";
+import { LocationProvider } from "@/lib/location-client";
 import { swrConfig, useSettings } from "@/lib/client";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
 import type { FeatureKey } from "@/db/schema";
@@ -133,7 +134,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <SWRConfig value={swrConfig}>
       <CategoriesProvider>
-        <Shell>{children}</Shell>
+        <LocationProvider>
+          <Shell>{children}</Shell>
+        </LocationProvider>
       </CategoriesProvider>
     </SWRConfig>
   );

@@ -3,6 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import type { Settings } from "@/db/schema";
 import { withDefaults } from "./constants";
+import { resolveLocation } from "./location";
 
 export async function getSettings(): Promise<Settings> {
   const [row] = await db().select().from(schema.settings).where(eq(schema.settings.id, 1));
@@ -32,4 +33,9 @@ export async function saveSettings(patch: SettingsPatch): Promise<Settings> {
       },
     });
   return getSettings();
+}
+
+/** The place server features use: fixed city, else last device location, else Ramsey. */
+export async function getLocation() {
+  return resolveLocation(await getSettings());
 }
