@@ -1,6 +1,6 @@
 # Life — personal dashboard
 
-Your day at a glance: local weather, golden hour, your college timetable, today's events, top 3 tasks, habits, projects, journal and a weekly review. It's an installable iPhone web app that syncs across devices. It was built for Jacob and works as a template for anyone: see **[Make your own copy](#make-your-own-copy-for-friends)**.
+Jacob's day at a glance: local weather, golden hour, college timetable, today's events, top 3 tasks, habits, projects, journal and a weekly review. It's an installable iPhone web app that syncs across devices. (Kai's dashboard is a separate copy, in `kai-life-dash`.)
 
 **Stack:** Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Postgres (Neon, via the Vercel Marketplace) · Drizzle ORM · SWR · hosted on Vercel.
 
@@ -75,7 +75,7 @@ Your actual password is never stored anywhere, only a scrambled (scrypt) version
 
 ### 5. Starter projects
 
-Two example projects are added automatically on the first deploy. This only happens once, so anything you delete or rename stays that way. (Jacob's own dashboard was set up with his projects: Northminster, Westbridge and the rest.)
+Your starter projects (Northminster, Westbridge, your house track, the media club, drone permissions and the job search) are added automatically on the first deploy. This only happens once, so anything you delete or rename stays that way.
 
 ### 6. Morning notifications (optional, about 5 minutes)
 
@@ -147,7 +147,7 @@ To change the schema, edit `src/db/schema.ts`, run `npm run db:generate`, and co
 
 ## Timetable
 
-Anyone can add lessons on the Timetable page with **+ Lesson**. Set your group in **Settings → You**. The rest of this section covers how Jacob's own timetable was added.
+Add or change lessons on the Timetable page with **+ Lesson**. Your group is in **Settings → You**.
 
 
 `drizzle/0002_timetable.sql` adds an `events.kind` column (default `event`; timetable lessons are `lesson`). It also adds the eight lessons for group 3-1b as weekly College events, starting the week of 16 November 2026. They're only added if no lessons exist yet, so redeploying never duplicates them. Nothing existing is changed.
@@ -175,21 +175,7 @@ All times are shown in the app's time zone: UK time unless `NEXT_PUBLIC_TIME_ZON
 
 No new environment variables or database migrations are needed. Location is kept in the existing settings record.
 
-## Make your own copy (for friends)
-
-Everyone gets their **own** private copy: their own website, database and password. Nobody can see anyone else's data. It's free on Vercel's and Neon's free plans and takes about 15 minutes, with no coding.
-
-1. **Copy the code.** Sign in to GitHub, open this repository and click **Fork**. That makes your own copy. (If the repo is private, the owner must add you as a collaborator first.)
-2. **Follow [Setup](#setup-about-15-minutes) steps 2–7 above** with your fork: import it into Vercel, add the Neon database, open your new site and choose your password, then redeploy.
-3. **Make it yours** in the app's **Settings**:
-   - **You:** your name (for the greeting and morning notification) and your timetable group.
-   - **Categories:** a fresh copy starts with Study, Work, Personal, Health, Creative and Other. Rename, recolour, add or delete them.
-   - **Features:** switch off anything you won't use (e.g. Kit lists, Gym plan, Timetable).
-   - **Today screen:** pick and order the cards.
-   - **Location:** use your current location or pick a fixed town.
-4. **Add your own stuff:** projects, timetable lessons (**Timetable → + Lesson**), kit lists and gym plan.
-
-A fresh copy starts clean, with none of Jacob's data: two example projects, one example packing list ("Weekend away"), an empty timetable and the starter gym plan. Jacob's lessons, projects and cadet lists are only ever added to his own database.
+## Changing time zone or default location
 
 **Outside the UK?** In Vercel → Settings → Environment Variables, add:
 

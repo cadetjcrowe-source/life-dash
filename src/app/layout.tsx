@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { OWNER_NAME } from "@/lib/profile";
 
 export const metadata: Metadata = {
   title: { default: "Life", template: "%s · Life" },
-  description: "Your personal life dashboard",
+  description: `${OWNER_NAME}'s personal life dashboard`,
   applicationName: "Life",
   appleWebApp: { capable: true, title: "Life", statusBarStyle: "default" },
   formatDetection: { telephone: false },

@@ -1,3 +1,6 @@
+/** Whose dashboard this is: shown on the login page and used as the default name. */
+export const OWNER_NAME = "Jacob";
+
 // Install-wide defaults. Everything else personal (your name, categories,
 // location, timetable…) lives in the database and is edited in Settings.
 //

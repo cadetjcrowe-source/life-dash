@@ -5,10 +5,13 @@ import * as schema from "../src/db/schema";
 import { DEFAULT_SETTINGS } from "../src/lib/constants";
 import { today } from "../src/lib/dates";
 
-// Example projects for a brand-new dashboard. Edit, archive or delete them in the app.
 const PROJECTS = [
-  { name: "My first project", emoji: "🚀", category: "Personal", status: "active", progress: 0, nextAction: "Tap this card to rename it and set a next action" },
-  { name: "Something to learn", emoji: "📚", category: "Other", status: "idea", progress: 0, nextAction: "Write down the very first step" },
+  { name: "Northminster", emoji: "🏰", category: "Roblox dev", status: "active", progress: 10, nextAction: "Write down the core game loop" },
+  { name: "Westbridge", emoji: "🌉", category: "Roblox dev", status: "active", progress: 10, nextAction: "Block out the main map" },
+  { name: "Music production: first house track", emoji: "🎧", category: "Music", status: "active", progress: 5, nextAction: "Make a 4-bar drum loop at 124 BPM" },
+  { name: "College media club", emoji: "🎬", category: "College", status: "idea", progress: 0, nextAction: "Talk to a tutor about starting it" },
+  { name: "Drone permissions (IOM CAA)", emoji: "🛩️", category: "Personal", status: "active", progress: 0, nextAction: "Check the IOM CAA requirements for my drone" },
+  { name: "Job search", emoji: "💼", category: "Personal", status: "active", progress: 0, nextAction: "Update my CV" },
 ] as const;
 
 async function main() {

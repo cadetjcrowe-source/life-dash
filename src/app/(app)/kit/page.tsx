@@ -33,7 +33,7 @@ export default function KitPage() {
     <>
       <PageHeader
         title="Kit lists"
-        subtitle="Reusable packing checklists"
+        subtitle="Cadets packing checklists"
         action={
           <Button variant={editing ? "primary" : "secondary"} onClick={() => setEditing((e) => !e)} className="mb-1">
             {editing ? "Done" : "Edit"}
