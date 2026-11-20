@@ -7,6 +7,7 @@ import { AssignmentsCard } from "@/components/AssignmentsCard";
 import { useSecondaryNav } from "@/components/AppShell";
 import { EventItem, EventSheet } from "@/components/events";
 import { GoldenCard } from "@/components/GoldenCard";
+import { NextLessonCard } from "@/components/NextLessonCard";
 import { HabitDay, useHabitData } from "@/components/habits";
 import { IconChevronRight, IconInbox, IconMore, IconPlus } from "@/components/Icons";
 import { QuickCapture } from "@/components/QuickCapture";
@@ -47,6 +48,7 @@ export default function TodayPage() {
 
   const cards: Record<TodayCardId, ReactNode> = {
     weather: <WeatherCard />,
+    lesson: <NextLessonCard />,
     golden: <GoldenCard />,
     assignments: <AssignmentsCard onOpen={setEditTask} />,
     events: (

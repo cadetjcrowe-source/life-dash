@@ -28,6 +28,7 @@ const eventBase = z.object({
   repeat: z.enum(["none", "daily", "weekly", "fortnightly", "monthly"]).optional(),
   repeatUntil: ymd.nullable().optional(),
   excludedDates: z.array(ymd).max(500).optional(),
+  kind: z.enum(["event", "lesson"]).optional(),
 });
 export const eventInput = eventBase;
 export const eventPatch = eventBase.omit({ id: true }).partial();
@@ -72,7 +73,7 @@ export const place = z.object({
 });
 export const deviceLocation = place.extend({ accuracy: z.number().min(0).max(100_000).nullable().optional() });
 
-const featureKey = z.enum(["golden", "assignments", "shots", "kit", "gymPlan", "pixels", "morningPush"]);
+const featureKey = z.enum(["golden", "assignments", "shots", "kit", "gymPlan", "pixels", "morningPush", "timetable"]);
 const gymExercise = z.object({
   id: z.string().min(1).max(60),
   name: z.string().trim().min(1).max(100),
@@ -94,7 +95,7 @@ export const settingsInput = z.object({
   gymNudge: z.boolean().optional(),
   features: z.partialRecord(featureKey, z.boolean()).optional(),
   todayCards: z
-    .array(z.object({ id: z.enum(["weather", "golden", "assignments", "events", "tasks", "habits", "inbox"]), visible: z.boolean() }))
+    .array(z.object({ id: z.enum(["weather", "lesson", "golden", "assignments", "events", "tasks", "habits", "inbox"]), visible: z.boolean() }))
     .max(20)
     .optional(),
   pixelsMode: z.enum(["mood", "productivity"]).optional(),
@@ -104,6 +105,7 @@ export const settingsInput = z.object({
   pushTime: hm.optional(),
   locationMode: z.enum(["current", "fixed"]).optional(),
   fixedLocation: place.nullable().optional(),
+  timetableGroup: z.string().trim().max(30).optional(),
 });
 
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, "expected a #RRGGBB colour");

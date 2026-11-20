@@ -54,6 +54,7 @@ const blank = (date: string): EventDraft => ({
   repeat: "none",
   repeatUntil: null,
   excludedDates: [],
+  kind: "event",
 });
 
 export function EventSheet({

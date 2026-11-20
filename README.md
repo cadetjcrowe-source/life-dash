@@ -10,7 +10,8 @@ Jacob's day at a glance: weather for Ramsey, today's events, top 3 tasks, habits
 
 | Screen | What it does |
 | --- | --- |
-| **Today** | Greeting and date. Weather **for where you are** (with a 📍 place name, e.g. "Douglas"; tap the pin to refresh) with an hourly and 4-day forecast, a "good to be outside" flag (dry, light wind, good visibility) and a "calm enough to fly" drone flag. **Golden hour** for your location: sunrise, sunset, the morning and evening golden hours, and a live countdown to the next one. **Assignment countdowns**: big "X days left" cards, amber at 7 days and red at 2. Also today's events, your top 3 tasks, today's habits, and a quick-capture box that saves to an inbox. You choose and order the cards in Settings. |
+| **Today** | Greeting and date. **Next lesson**: room, start time and a countdown (or "On now", "Done for today" or "No lessons today", with your next lesson). Weather **for where you are** (with a 📍 place name, e.g. "Douglas"; tap the pin to refresh) with an hourly and 4-day forecast, a "good to be outside" flag (dry, light wind, good visibility) and a "calm enough to fly" drone flag. **Golden hour** for your location: sunrise, sunset, the morning and evening golden hours, and a live countdown to the next one. **Assignment countdowns**: big "X days left" cards, amber at 7 days and red at 2. Also today's events, your top 3 tasks, today's habits, and a quick-capture box that saves to an inbox. You choose and order the cards in Settings. |
+| **Timetable** | Your college timetable (group 3-1b) as a weekly Mon–Fri grid from 08:00 to 18:00. On iPhone it shows one day at a time: swipe or tap the day buttons. On desktop all five days sit side by side. Tap a lesson to set its **subject** (e.g. Photography) and **room**, change the day or time, set the last week of term, **skip a single week** (holidays, cancelled lessons) or delete it. Add lessons with **+ Lesson**. Lessons are weekly College events, so they also appear in the Calendar. |
 | **Tasks** | Add/edit/complete tasks with a due date, priority and category, and mark any task as an **assignment**. Grouped into Overdue / Today / This week / Later, with category filters. Inbox items become tasks in one tap. |
 | **Calendar** | Day timeline (with a "now" line) and week view. Events repeat daily, weekly, fortnightly or monthly, with an optional end date, and you can skip a single occurrence. |
 | **Habits** | Water (tap +1 glass), sleep hours, creative practice (music / editing / photography, with minutes). Streaks and a 7-day chart for each. **Gym** is low-pressure: no streaks and no shaming, it celebrates every session, shows sessions this month, and has an optional gentle nudge you can switch off. |
@@ -21,7 +22,7 @@ Jacob's day at a glance: weather for Ramsey, today's events, top 3 tasks, habits
 | **Kit lists** | Reusable cadet packing checklists (parade night, field day and camp to start with). Tick items off, and reset a whole list with one tap. Add, rename and delete lists and items. |
 | **Gym plan** | An editable beginner routine: 3 full-body days, each with sets, reps and how-to notes. It suggests which day is next and celebrates every session. Shows sessions this month, with no streaks and no guilt. |
 | **Year in pixels** | Every day of the year as a square, coloured by journal mood or by a productivity score (switchable). Tap a day to see its journal entry and stats. |
-| **Morning summary** | An optional push notification each morning with the weather, golden hour and your top 3 tasks. Works on the installed iPhone app (iOS 16.4+). |
+| **Morning summary** | An optional push notification each morning with the weather, today's lessons (time and room), golden hour and your top 3 tasks. Works on the installed iPhone app (iOS 16.4+). |
 | **Settings** | **Location**: use your current location or a fixed place (city search), plus a Refresh location button. **Categories**: add, rename, recolour, reorder and delete them (a rename updates everything using it). **Feature switches** for each extra. **Today card order and visibility.** Also shot tags, pixels colour mode, habit targets, morning notification time, **Export all data (JSON)**, and sign out. |
 
 All "today", "this week" and streak calculations use **Europe/London**.
@@ -143,6 +144,18 @@ Open <http://localhost:3000>.
 To change the schema, edit `src/db/schema.ts`, run `npm run db:generate`, and commit the new file in `drizzle/`. It's applied on the next deploy.
 
 ---
+
+## Timetable
+
+`drizzle/0002_timetable.sql` adds an `events.kind` column (default `event`; timetable lessons are `lesson`). It also adds the eight lessons for group 3-1b as weekly College events, starting the week of 16 November 2026. They're only added if no lessons exist yet, so redeploying never duplicates them. Nothing existing is changed.
+
+| Day | Time | Room |
+| --- | --- | --- |
+| Tuesday | 10:15–11:30 · 11:45–12:45 · 13:45–15:15 | K303 · K305 · M223 |
+| Thursday | 10:45–12:15 · 14:15–15:30 | A251 · M223 |
+| Friday | 10:00–11:45 · 12:00–13:30 · 14:30–16:00 | K313 · M223 · K313 |
+
+Subjects start as "Lesson"; tap each one to name it. Skipping a week adds that date to the lesson's skip list (restore it from the same sheet). Lessons repeat indefinitely unless you set **Last week of term**.
 
 ## Location
 

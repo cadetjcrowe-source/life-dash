@@ -7,6 +7,7 @@ import { getLocation, getSettings } from "./settings";
 import { shortName } from "./location";
 import { fmtTime, goldenStatus, sunDay } from "./sun";
 import { topThree } from "./tasks";
+import { lessonsOn, subjectOf } from "./timetable";
 import { describe } from "./weather";
 import { getWeather } from "./weather-server";
 
@@ -52,13 +53,21 @@ export async function sendToAll(payload: PushPayload): Promise<{ sent: number; r
 export async function buildMorningSummary(): Promise<PushPayload> {
   const t = londonToday();
   const place = await getLocation();
-  const [weather, tasks, settings] = await Promise.all([getWeather(place), db().select().from(schema.tasks).where(eq(schema.tasks.done, false)), getSettings()]);
+  const [weather, tasks, settings, events] = await Promise.all([getWeather(place), db().select().from(schema.tasks).where(eq(schema.tasks.done, false)), getSettings(), db().select().from(schema.events)]);
 
   const lines: string[] = [];
   if (weather) {
     const d = describe(weather.current.code, weather.current.isDay);
     const today = weather.daily[0];
     lines.push(`${d.icon} ${Math.round(weather.current.temp)}° in ${shortName(place.name)}, ${d.label.toLowerCase()}${today ? `, high ${Math.round(today.max)}°` : ""}${weather.outside.good ? " · good to be outside" : ""}`);
+  }
+  if (settings.features.timetable) {
+    const lessons = lessonsOn(events, t).filter((l) => l.startTime);
+    lines.push(
+      lessons.length
+        ? `🎓 ${lessons.map((l) => `${l.startTime} ${l.location}${subjectOf(l) !== "Lesson" ? ` ${subjectOf(l)}` : ""}`).join(" · ")}`
+        : "🎓 No lessons today",
+    );
   }
   if (settings.features.golden) {
     const day = sunDay(t, place);

@@ -209,3 +209,9 @@ export const IconRefresh = (p: P) => (
     <path d="M20 11.5A8 8 0 0 0 5.6 6.8L4 8.5M4 4v4.5h4.5M4 12.5a8 8 0 0 0 14.4 4.7l1.6-1.7M20 20v-4.5h-4.5" />
   </Base>
 );
+export const IconTimetable = (p: P) => (
+  <Base {...p}>
+    <rect x="3.5" y="4.5" width="17" height="16" rx="3.5" />
+    <path d="M3.5 9.5h17M9 9.5v11M15 9.5v11M8 2.5v4M16 2.5v4" />
+  </Base>
+);

@@ -53,6 +53,7 @@ export const REPEATS = [
 ] as const;
 
 export const FEATURES: { key: FeatureKey; label: string; description: string }[] = [
+  { key: "timetable", label: "College timetable", description: "Weekly lessons and a next-lesson countdown" },
   { key: "golden", label: "Golden hour", description: "Sunrise, sunset & golden hour countdown on Today" },
   { key: "assignments", label: "Assignment countdowns", description: "Big days-left cards for assignments" },
   { key: "shots", label: "Shot ideas", description: "Board of photo & video ideas" },
@@ -64,6 +65,7 @@ export const FEATURES: { key: FeatureKey; label: string; description: string }[]
 
 export const TODAY_CARDS: { id: TodayCardId; label: string; feature?: FeatureKey }[] = [
   { id: "weather", label: "Weather" },
+  { id: "lesson", label: "Next lesson", feature: "timetable" },
   { id: "golden", label: "Golden hour", feature: "golden" },
   { id: "assignments", label: "Assignment countdowns", feature: "assignments" },
   { id: "events", label: "Today's events" },
@@ -129,7 +131,7 @@ export const DEFAULT_SETTINGS: Settings = {
   waterTarget: 8,
   creativeTarget: 20,
   gymNudge: true,
-  features: { golden: true, assignments: true, shots: true, kit: true, gymPlan: true, pixels: true, morningPush: true },
+  features: { golden: true, assignments: true, shots: true, kit: true, gymPlan: true, pixels: true, morningPush: true, timetable: true },
   todayCards: TODAY_CARDS.map((c) => ({ id: c.id, visible: true })),
   pixelsMode: "mood",
   shotTags: ["Drone", "Landscape", "Portrait", "Street", "Video", "Astro", "Coast"],
@@ -141,6 +143,7 @@ export const DEFAULT_SETTINGS: Settings = {
   locationMode: "current",
   fixedLocation: null,
   lastLocation: null,
+  timetableGroup: "3-1b",
 };
 
 /** Fill in any settings keys added since the user's settings were first saved. */
@@ -149,7 +152,10 @@ export function withDefaults(saved: Partial<Settings> | null | undefined): Setti
   s.features = { ...DEFAULT_SETTINGS.features, ...(saved?.features ?? {}) };
   const known = new Set(TODAY_CARDS.map((c) => c.id));
   const cards = (saved?.todayCards ?? []).filter((c) => known.has(c.id));
-  for (const c of TODAY_CARDS) if (!cards.some((x) => x.id === c.id)) cards.push({ id: c.id, visible: true });
+  // Cards added in newer versions slot in at their default position.
+  TODAY_CARDS.forEach((c, i) => {
+    if (!cards.some((x) => x.id === c.id)) cards.splice(Math.min(i, cards.length), 0, { id: c.id, visible: true });
+  });
   s.todayCards = cards;
   return s;
 }

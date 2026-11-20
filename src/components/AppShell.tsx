@@ -17,6 +17,7 @@ import {
   IconChecklist,
   IconDumbbell,
   IconGrid,
+  IconTimetable,
   IconHabits,
   IconJournal,
   IconProjects,
@@ -35,6 +36,7 @@ const PRIMARY = [
 ];
 type NavItem = { href: string; label: string; Icon: typeof IconToday; feature?: FeatureKey };
 const SECONDARY: NavItem[] = [
+  { href: "/timetable", label: "Timetable", Icon: IconTimetable, feature: "timetable" },
   { href: "/calendar", label: "Calendar", Icon: IconCalendar },
   { href: "/review", label: "Weekly review", Icon: IconReview },
   { href: "/shots", label: "Shot ideas", Icon: IconCamera, feature: "shots" },

@@ -51,6 +51,8 @@ export const events = pgTable("events", {
   repeat: text("repeat").notNull().default("none"), // none | daily | weekly | fortnightly | monthly
   repeatUntil: date("repeat_until", { mode: "string" }),
   excludedDates: jsonb("excluded_dates").$type<string[]>().notNull().default([]),
+  // "lesson" = part of the college timetable (title = subject, location = room).
+  kind: text("kind").notNull().default("event"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -136,8 +138,8 @@ export const weeklyReviews = pgTable("weekly_reviews", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export type FeatureKey = "golden" | "assignments" | "shots" | "kit" | "gymPlan" | "pixels" | "morningPush";
-export type TodayCardId = "weather" | "golden" | "assignments" | "events" | "tasks" | "habits" | "inbox";
+export type FeatureKey = "golden" | "assignments" | "shots" | "kit" | "gymPlan" | "pixels" | "morningPush" | "timetable";
+export type TodayCardId = "weather" | "lesson" | "golden" | "assignments" | "events" | "tasks" | "habits" | "inbox";
 
 export type GymExercise = { id: string; name: string; sets: number; reps: string; notes: string };
 export type GymDay = { id: string; name: string; focus: string; exercises: GymExercise[] };
@@ -162,6 +164,7 @@ export type Settings = {
   locationMode: "current" | "fixed";
   fixedLocation: Place | null; // chosen via city search in Settings
   lastLocation: SavedPlace | null; // last device location reported by the app
+  timetableGroup: string; // e.g. "3-1b"
 };
 
 export const settings = pgTable("settings", {
