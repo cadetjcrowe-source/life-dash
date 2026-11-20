@@ -10,14 +10,17 @@ import { topThree } from "./tasks";
 import { lessonsOn, subjectOf } from "./timetable";
 import { describe } from "./weather";
 import { getWeather } from "./weather-server";
+import { vapidKeys } from "./vapid";
 
-export const pushConfigured = () => !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
+export const pushConfigured = () => vapidKeys().ok;
 
 function setup() {
   const site = process.env.VERCEL_PROJECT_PRODUCTION_URL;
   // Apple's push service needs a real mailto: or https: subject.
   const subject = process.env.VAPID_SUBJECT || (site ? `https://${site}` : "mailto:life-dashboard@example.org");
-  webpush.setVapidDetails(subject, process.env.VAPID_PUBLIC_KEY!, process.env.VAPID_PRIVATE_KEY!);
+  const keys = vapidKeys();
+  if (!keys.ok) throw new Error(`Push keys problem: ${keys.problem}`);
+  webpush.setVapidDetails(subject, keys.publicKey, keys.privateKey);
 }
 
 export type PushPayload = { title: string; body: string; url?: string; tag?: string };

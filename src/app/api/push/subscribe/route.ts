@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db, schema } from "@/db";
 import { body, handle, ok } from "@/lib/http";
 import { pushConfigured } from "@/lib/push";
+import { vapidKeys } from "@/lib/vapid";
 
 const sub = z.object({
   endpoint: z.url({ protocol: /^https$/ }).max(2000),
@@ -11,8 +12,14 @@ const sub = z.object({
 
 // GET: is push set up, the public key for subscribing, and how many devices are registered.
 export const GET = handle(async () => {
-  const devices = pushConfigured() ? (await db().select({ id: schema.pushSubscriptions.id }).from(schema.pushSubscriptions)).length : 0;
-  return ok({ configured: pushConfigured(), publicKey: process.env.VAPID_PUBLIC_KEY ?? null, devices });
+  const keys = vapidKeys();
+  const devices = keys.ok ? (await db().select({ id: schema.pushSubscriptions.id }).from(schema.pushSubscriptions)).length : 0;
+  return ok({
+    configured: keys.ok,
+    problem: keys.ok ? null : keys.problem,
+    publicKey: keys.ok ? keys.publicKey : null, // cleaned + checked, never the raw pasted text
+    devices,
+  });
 });
 
 export const POST = handle(async (req: Request) => {

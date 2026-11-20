@@ -2,7 +2,7 @@
 
 import { api } from "./client";
 
-export type PushInfo = { configured: boolean; publicKey: string | null; devices: number };
+export type PushInfo = { configured: boolean; problem: "missing" | "invalid" | "mismatch" | null; publicKey: string | null; devices: number };
 
 export const pushSupported = () =>
   typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
@@ -20,6 +20,8 @@ function keyToBytes(base64: string) {
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
 
+const sameBytes = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((x, i) => x === b[i]);
+
 export async function currentSubscription(): Promise<PushSubscription | null> {
   if (!pushSupported()) return null;
   const reg = await navigator.serviceWorker.getRegistration("/");
@@ -32,9 +34,15 @@ export async function enablePush(publicKey: string): Promise<void> {
   if (permission !== "granted") throw new Error("Notifications are blocked. Allow them for Life in your iPhone Settings → Notifications.");
   const reg = (await navigator.serviceWorker.getRegistration("/")) ?? (await navigator.serviceWorker.register("/sw.js"));
   await navigator.serviceWorker.ready;
-  const sub =
-    (await reg.pushManager.getSubscription()) ??
-    (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyToBytes(publicKey) }));
+  const key = keyToBytes(publicKey.trim());
+  let sub = await reg.pushManager.getSubscription();
+  // If the keys were changed since this device subscribed, start again with the new key.
+  const old = sub?.options.applicationServerKey;
+  if (sub && old && !sameBytes(new Uint8Array(old), key)) {
+    await sub.unsubscribe();
+    sub = null;
+  }
+  sub ??= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
   await api("/api/push/subscribe", "POST", sub.toJSON());
 }
 

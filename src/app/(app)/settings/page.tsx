@@ -376,7 +376,13 @@ function MorningCard() {
 
       {info && !info.configured ? (
         <div className="space-y-3">
-          <p className="rounded-xl bg-warn-soft p-3 text-[15px] text-warn">One-time setup needed: add three values to Vercel (see the README, "Morning notifications").</p>
+          <p className="rounded-xl bg-warn-soft p-3 text-[15px] text-warn">
+            {info.problem === "mismatch"
+              ? "The two push keys in Vercel don't belong together. Tap Generate, then replace BOTH VAPID keys in Vercel and redeploy."
+              : info.problem === "invalid"
+                ? "One of the push keys in Vercel wasn't pasted correctly (it may be cut short or in the wrong box). Tap Generate, then replace BOTH VAPID keys in Vercel and redeploy."
+                : "One-time setup needed: add three values to Vercel (see the README, \"Morning notifications\")."}
+          </p>
           {!keys ? (
             <Button variant="secondary" className="w-full" disabled={busy} onClick={() => run(async () => setKeys(await api<Keys>("/api/push/keys", "POST")))}>
               Generate the values
@@ -394,7 +400,7 @@ function MorningCard() {
                   <code className="mt-1 block break-all text-[12px] text-muted">{keys[k]}</code>
                 </div>
               ))}
-              <p className="text-[14px] text-muted">Add them in Vercel → Settings → Environment Variables, then Redeploy.</p>
+              <p className="text-[14px] text-muted">In Vercel → Settings → Environment Variables, add or replace each one (edit the existing entry if there is one, so there are no duplicates), then Redeploy.</p>
             </div>
           )}
         </div>
