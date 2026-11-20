@@ -52,20 +52,37 @@ CREATE TABLE "shot_ideas" (
 ALTER TABLE "tasks" ADD COLUMN "is_assignment" boolean DEFAULT false NOT NULL;--> statement-breakpoint
 ALTER TABLE "kit_items" ADD CONSTRAINT "kit_items_list_id_kit_lists_id_fk" FOREIGN KEY ("list_id") REFERENCES "public"."kit_lists"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "kit_items_list_idx" ON "kit_items" USING btree ("list_id");--> statement-breakpoint
--- Data: default categories (existing names in tasks/events/projects are kept too).
-INSERT INTO "categories" ("name", "color", "sort_order") VALUES
-  ('College', '#6E8FD8', 0), ('Cadets', '#7FA37A', 1), ('Roblox dev', '#D69A5C', 2),
-  ('Music', '#B184C9', 3), ('Personal', '#5FAFAA', 4), ('Other', '#9A9AA3', 5)
+-- Data: starting categories. Jacob's own database (recognised by his starter
+-- projects) gets his set; a fresh copy for someone else gets a general set.
+-- Existing names in tasks/events/projects are kept too. All editable in Settings.
+INSERT INTO "categories" ("name", "color", "sort_order")
+  SELECT v.name, v.color, v.ord FROM (VALUES
+    ('College', '#6E8FD8', 0), ('Cadets', '#7FA37A', 1), ('Roblox dev', '#D69A5C', 2),
+    ('Music', '#B184C9', 3), ('Personal', '#5FAFAA', 4), ('Other', '#9A9AA3', 5)
+  ) AS v(name, color, ord)
+  WHERE EXISTS (SELECT 1 FROM "projects" WHERE "name" IN ('Northminster', 'Westbridge'))
+ON CONFLICT ("name") DO NOTHING;--> statement-breakpoint
+INSERT INTO "categories" ("name", "color", "sort_order")
+  SELECT v.name, v.color, v.ord FROM (VALUES
+    ('Study', '#6E8FD8', 0), ('Work', '#D69A5C', 1), ('Personal', '#5FAFAA', 2),
+    ('Health', '#7FA37A', 3), ('Creative', '#B184C9', 4), ('Other', '#9A9AA3', 5)
+  ) AS v(name, color, ord)
+  WHERE NOT EXISTS (SELECT 1 FROM "projects" WHERE "name" IN ('Northminster', 'Westbridge'))
 ON CONFLICT ("name") DO NOTHING;--> statement-breakpoint
 INSERT INTO "categories" ("name", "sort_order")
   SELECT DISTINCT c, 100 FROM (
     SELECT "category" AS c FROM "tasks" UNION SELECT "category" FROM "events" UNION SELECT "category" FROM "projects"
   ) used
 ON CONFLICT ("name") DO NOTHING;--> statement-breakpoint
--- Data: starter cadet kit lists.
+-- Data: starter kit lists – Jacob's cadet lists on his database, one general
+-- packing list on a fresh copy for someone else.
 WITH l AS (
-  INSERT INTO "kit_lists" ("name", "emoji", "sort_order") VALUES
-    ('Parade night', '🎖️', 0), ('Field day', '🥾', 1), ('Camp', '⛺', 2)
+  INSERT INTO "kit_lists" ("name", "emoji", "sort_order")
+  SELECT v.name, v.emoji, v.ord FROM (VALUES ('Parade night', '🎖️', 0), ('Field day', '🥾', 1), ('Camp', '⛺', 2)) AS v(name, emoji, ord)
+  WHERE EXISTS (SELECT 1 FROM "projects" WHERE "name" IN ('Northminster', 'Westbridge'))
+  UNION ALL
+  SELECT 'Weekend away', '🎒', 0
+  WHERE NOT EXISTS (SELECT 1 FROM "projects" WHERE "name" IN ('Northminster', 'Westbridge'))
   RETURNING "id", "name"
 )
 INSERT INTO "kit_items" ("list_id", "text", "sort_order")
@@ -81,5 +98,7 @@ SELECT l."id", i.text, i.ord FROM l JOIN (VALUES
   ('Camp', 'PT kit & trainers', 4), ('Camp', 'Underwear & socks (one per day + spare)', 5), ('Camp', 'Waterproofs', 6),
   ('Camp', 'Torch + spare batteries', 7), ('Camp', 'Mess tin & cutlery', 8), ('Camp', 'Water bottle', 9),
   ('Camp', 'Medication', 10), ('Camp', 'Cadet ID card', 11), ('Camp', 'Phone charger / power bank', 12),
-  ('Camp', 'Bin bags (for wet kit)', 13)
+  ('Camp', 'Bin bags (for wet kit)', 13),
+  ('Weekend away', 'Phone charger', 0), ('Weekend away', 'Toothbrush & wash kit', 1), ('Weekend away', 'Change of clothes', 2),
+  ('Weekend away', 'Jacket', 3), ('Weekend away', 'Medication', 4), ('Weekend away', 'Headphones', 5), ('Weekend away', 'Wallet / bank card', 6)
 ) AS i(list, text, ord) ON i.list = l."name";

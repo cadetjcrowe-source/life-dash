@@ -1,8 +1,10 @@
-// All "today" logic runs in Europe/London. Calendar days are handled as
+// All "today" logic runs in your time zone (Europe/London unless NEXT_PUBLIC_TIME_ZONE is set). Calendar days are handled as
 // "YYYY-MM-DD" strings; arithmetic is done on UTC-midnight dates so it is
 // immune to DST and device timezone.
 
-export const TZ = "Europe/London";
+import { TIME_ZONE } from "./profile";
+
+export const TZ = TIME_ZONE;
 
 const ymdFmt = new Intl.DateTimeFormat("en-CA", {
   timeZone: TZ,

@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "Life", template: "%s · Life" },
-  description: "Jacob's personal life dashboard",
+  description: "Your personal life dashboard",
   applicationName: "Life",
   appleWebApp: { capable: true, title: "Life", statusBarStyle: "default" },
   formatDetection: { telephone: false },

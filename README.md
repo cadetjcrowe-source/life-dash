@@ -1,6 +1,6 @@
 # Life — personal dashboard
 
-Jacob's day at a glance: weather for Ramsey, today's events, top 3 tasks, habits, projects, journal and a weekly review. Built as an installable iPhone web app that syncs across devices.
+Your day at a glance: local weather, golden hour, your college timetable, today's events, top 3 tasks, habits, projects, journal and a weekly review. It's an installable iPhone web app that syncs across devices. It was built for Jacob and works as a template for anyone: see **[Make your own copy](#make-your-own-copy-for-friends)**.
 
 **Stack:** Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Postgres (Neon, via the Vercel Marketplace) · Drizzle ORM · SWR · hosted on Vercel.
 
@@ -11,11 +11,11 @@ Jacob's day at a glance: weather for Ramsey, today's events, top 3 tasks, habits
 | Screen | What it does |
 | --- | --- |
 | **Today** | Greeting and date. **Next lesson**: room, start time and a countdown (or "On now", "Done for today" or "No lessons today", with your next lesson). Weather **for where you are** (with a 📍 place name, e.g. "Douglas"; tap the pin to refresh) with an hourly and 4-day forecast, a "good to be outside" flag (dry, light wind, good visibility) and a "calm enough to fly" drone flag. **Golden hour** for your location: sunrise, sunset, the morning and evening golden hours, and a live countdown to the next one. **Assignment countdowns**: big "X days left" cards, amber at 7 days and red at 2. Also today's events, your top 3 tasks, today's habits, and a quick-capture box that saves to an inbox. You choose and order the cards in Settings. |
-| **Timetable** | Your college timetable (group 3-1b) as a weekly Mon–Fri grid from 08:00 to 18:00. On iPhone it shows one day at a time: swipe or tap the day buttons. On desktop all five days sit side by side. Tap a lesson to set its **subject** (e.g. Photography) and **room**, change the day or time, set the last week of term, **skip a single week** (holidays, cancelled lessons) or delete it. Add lessons with **+ Lesson**. Lessons are weekly College events, so they also appear in the Calendar. |
+| **Timetable** | Your college or school timetable as a weekly Mon–Fri grid from 08:00 to 18:00. On iPhone it shows one day at a time: swipe or tap the day buttons. On desktop all five days sit side by side. Tap a lesson to set its **subject** (e.g. Photography) and **room**, change the day or time, set the last week of term, **skip a single week** (holidays, cancelled lessons) or delete it. Add lessons with **+ Lesson**. Lessons are weekly College events, so they also appear in the Calendar. |
 | **Tasks** | Add/edit/complete tasks with a due date, priority and category, and mark any task as an **assignment**. Grouped into Overdue / Today / This week / Later, with category filters. Inbox items become tasks in one tap. |
 | **Calendar** | Day timeline (with a "now" line) and week view. Events repeat daily, weekly, fortnightly or monthly, with an optional end date, and you can skip a single occurrence. |
 | **Habits** | Water (tap +1 glass), sleep hours, creative practice (music / editing / photography, with minutes). Streaks and a 7-day chart for each. **Gym** is low-pressure: no streaks and no shaming, it celebrates every session, shows sessions this month, and has an optional gentle nudge you can switch off. |
-| **Projects** | Cards with status, progress bar, next action and notes. You can add, archive and reorder them. Seeded with Northminster, Westbridge, your first house track, the college media club, drone permissions (IOM CAA) and the job search. |
+| **Projects** | Cards with status, progress bar, next action and notes. You can add, archive and reorder them. |
 | **Journal** | One entry per day, an optional mood, autosave, and search across past entries. |
 | **Weekly review** | Summarises any week automatically (tasks done by category, habit hits, creative minutes, gym sessions, project progress), then asks what went well, what didn't, and your top 3 for next week. Saved reviews are kept, and Today shows a reminder every Sunday. |
 | **Shot ideas** | A board of photo/video ideas: title, description, location, best time of day (golden hour, blue hour…), an inspiration link and image, and tags. Filter by tag or location, and tick ideas off as "shot". |
@@ -25,7 +25,7 @@ Jacob's day at a glance: weather for Ramsey, today's events, top 3 tasks, habits
 | **Morning summary** | An optional push notification each morning with the weather, today's lessons (time and room), golden hour and your top 3 tasks. Works on the installed iPhone app (iOS 16.4+). |
 | **Settings** | **Location**: use your current location or a fixed place (city search), plus a Refresh location button. **Categories**: add, rename, recolour, reorder and delete them (a rename updates everything using it). **Feature switches** for each extra. **Today card order and visibility.** Also shot tags, pixels colour mode, habit targets, morning notification time, **Export all data (JSON)**, and sign out. |
 
-All "today", "this week" and streak calculations use **Europe/London**.
+All "today", "this week" and streak calculations use **Europe/London** (UK time). You can change this with `NEXT_PUBLIC_TIME_ZONE`.
 
 ---
 
@@ -75,7 +75,7 @@ Your actual password is never stored anywhere, only a scrambled (scrypt) version
 
 ### 5. Starter projects
 
-These are added automatically on the first deploy: Northminster, Westbridge, your house track, the media club, drone permissions and the job search. This only happens once, so anything you delete or rename stays that way.
+Two example projects are added automatically on the first deploy. This only happens once, so anything you delete or rename stays that way. (Jacob's own dashboard was set up with his projects: Northminster, Westbridge and the rest.)
 
 ### 6. Morning notifications (optional, about 5 minutes)
 
@@ -147,6 +147,9 @@ To change the schema, edit `src/db/schema.ts`, run `npm run db:generate`, and co
 
 ## Timetable
 
+Anyone can add lessons on the Timetable page with **+ Lesson**. Set your group in **Settings → You**. The rest of this section covers how Jacob's own timetable was added.
+
+
 `drizzle/0002_timetable.sql` adds an `events.kind` column (default `event`; timetable lessons are `lesson`). It also adds the eight lessons for group 3-1b as weekly College events, starting the week of 16 November 2026. They're only added if no lessons exist yet, so redeploying never duplicates them. Nothing existing is changed.
 
 | Day | Time | Room |
@@ -165,12 +168,37 @@ Weather, golden hour and the morning summary follow **your location**:
 2. **Battery-friendly.** The app checks your position when it opens or comes back to the foreground, at most every **30 minutes**, using low-power positioning. A new location is saved (and its name looked up) only if you've moved **more than 3 km** or the saved one is over 30 minutes old. Tapping the 📍 pin, or **Settings → Location → Refresh location**, gets a fresh fix straight away.
 3. **Place names** come from BigDataCloud's free reverse-geocoding service, with OpenStreetMap Nominatim as a backup. Neither needs a key.
 4. **Saved to your database.** Your last known location is stored in your settings, so server-side features use it too: the weather API, golden hour and the morning notification.
-5. **Fallbacks.** If location is off or unavailable, the app uses your **last saved location**, then **Ramsey, Isle of Man** (54.32, −4.38).
+5. **Fallbacks.** If location is off or unavailable, the app uses your **last saved location**, then the default place: **Ramsey, Isle of Man** (54.32, −4.38) unless `NEXT_PUBLIC_DEFAULT_LOCATION` is set.
 6. **Fixed location.** In **Settings → Location**, choose **Fixed location** and search for a town or city (Open-Meteo geocoding). Everything then uses that place until you switch back.
 
-All times are still shown in UK time (Europe/London), so if you travel abroad, sunrise and golden hour are given in UK time.
+All times are shown in the app's time zone: UK time unless `NEXT_PUBLIC_TIME_ZONE` is set. So if you travel abroad, sunrise and golden hour are still given in that time zone.
 
 No new environment variables or database migrations are needed. Location is kept in the existing settings record.
+
+## Make your own copy (for friends)
+
+Everyone gets their **own** private copy: their own website, database and password. Nobody can see anyone else's data. It's free on Vercel's and Neon's free plans and takes about 15 minutes, with no coding.
+
+1. **Copy the code.** Sign in to GitHub, open this repository and click **Fork**. That makes your own copy. (If the repo is private, the owner must add you as a collaborator first.)
+2. **Follow [Setup](#setup-about-15-minutes) steps 2–7 above** with your fork: import it into Vercel, add the Neon database, open your new site and choose your password, then redeploy.
+3. **Make it yours** in the app's **Settings**:
+   - **You:** your name (for the greeting and morning notification) and your timetable group.
+   - **Categories:** a fresh copy starts with Study, Work, Personal, Health, Creative and Other. Rename, recolour, add or delete them.
+   - **Features:** switch off anything you won't use (e.g. Kit lists, Gym plan, Timetable).
+   - **Today screen:** pick and order the cards.
+   - **Location:** use your current location or pick a fixed town.
+4. **Add your own stuff:** projects, timetable lessons (**Timetable → + Lesson**), kit lists and gym plan.
+
+A fresh copy starts clean, with none of Jacob's data: two example projects, one example packing list ("Weekend away"), an empty timetable and the starter gym plan. Jacob's lessons, projects and cadet lists are only ever added to his own database.
+
+**Outside the UK?** In Vercel → Settings → Environment Variables, add:
+
+- `NEXT_PUBLIC_TIME_ZONE`: your time zone, e.g. `Europe/Dublin` or `America/New_York`.
+- `NEXT_PUBLIC_DEFAULT_LOCATION`: the place to use before the app knows where you are, as `lat,lon,Name`, e.g. `53.48,-2.24,Manchester`.
+
+Redeploy after adding them. The morning notification's daily fallback time in `vercel.json` (06:30 UTC) is set for the UK. The optional GitHub pinger delivers at your chosen time anywhere.
+
+**Getting updates later:** when the original repo gets new features, open your fork on GitHub and click **Sync fork**. Vercel redeploys automatically, and database updates run on their own without touching your data.
 
 ## Environment variables
 
@@ -182,6 +210,8 @@ No new environment variables or database migrations are needed. Location is kept
 | `VAPID_PUBLIC_KEY` | for notifications | Web Push key pair (Settings → Morning summary → Generate) |
 | `VAPID_PRIVATE_KEY` | for notifications | ″ |
 | `CRON_SECRET` | for notifications | Protects `/api/cron/morning`; Vercel Cron sends it automatically |
+| `NEXT_PUBLIC_TIME_ZONE` | optional | Time zone for "today", streaks and all times. Default `Europe/London` |
+| `NEXT_PUBLIC_DEFAULT_LOCATION` | optional | Fallback place as `lat,lon,Name`. Default `54.32,-4.38,Ramsey, Isle of Man` |
 | `VAPID_SUBJECT` | optional | Contact for push services (`mailto:` or `https:`). Defaults to your site's URL |
 
 ## Database changes in this version
@@ -193,7 +223,7 @@ No new environment variables or database migrations are needed. Location is kept
 - **Sync across devices.** Every change is saved straight to Postgres. Each screen re-fetches when the app comes to the foreground, every 5 s while it's open, and after every change. Something added on your phone shows up on your desktop within a few seconds, no refresh needed.
 - **Instant ticks.** Changes are optimistic: the UI updates immediately and rolls back with a message if the save fails.
 - **Login.** One password, checked against a scrypt hash. A signed, `HttpOnly`, `Secure` session cookie lasts 30 days. Every page and API route except `/login` is protected by `src/proxy.ts`. Failed logins are slowed down.
-- **Golden hour** uses [suncalc](https://github.com/mourner/suncalc) for your current or fixed location (Ramsey by default): the morning golden hour runs from sunrise until the sun is 6° up, and the evening one from 6° until sunset (`src/lib/sun.ts`).
+- **Golden hour** uses [suncalc](https://github.com/mourner/suncalc) for your current or fixed location (the default place until it knows where you are): the morning golden hour runs from sunrise until the sun is 6° up, and the evening one from 6° until sunset (`src/lib/sun.ts`).
 - **Productivity score** (Year in pixels): up to 3 points for tasks done, plus a point each for hitting water, sleep, any creative practice and any gym session. That's 7 points, bucketed into 4 levels (`src/lib/pixels.ts`).
 - **Weather** comes from [Open-Meteo](https://open-meteo.com) (no key) for your location (rounded to about 1 km), cached for 15 minutes. The thresholds are in `src/lib/weather.ts`:
   - **Good to be outside:** no rain now, under a 30% chance in the next 3 hours, wind under 20 km/h, visibility of at least 10 km.

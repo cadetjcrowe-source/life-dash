@@ -11,7 +11,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
-// Dates that represent a calendar day in Europe/London are stored as
+// Dates that represent a calendar day in your time zone are stored as
 // `date` columns in "YYYY-MM-DD" string mode, so no timezone shifting ever happens.
 
 export const tasks = pgTable(
@@ -158,13 +158,14 @@ export type Settings = {
   shotTags: string[];
   gymPlan: GymDay[];
   pushEnabled: boolean;
-  pushTime: string; // "HH:MM" Europe/London
+  pushTime: string; // "HH:MM" in your time zone
   pushLastSent: string | null; // YYYY-MM-DD
   pushPrecisePingAt: string | null; // ISO – last time the 15-minute pinger called in
   locationMode: "current" | "fixed";
   fixedLocation: Place | null; // chosen via city search in Settings
   lastLocation: SavedPlace | null; // last device location reported by the app
   timetableGroup: string; // e.g. "3-1b"
+  ownerName: string; // shown in the greeting and morning summary
 };
 
 export const settings = pgTable("settings", {

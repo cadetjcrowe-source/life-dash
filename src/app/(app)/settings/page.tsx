@@ -13,7 +13,7 @@ import { api, useSettings } from "@/lib/client";
 import { CATEGORY_SWATCHES, DEFAULT_SETTINGS, FEATURES, TODAY_CARDS } from "@/lib/constants";
 import { searchCities, useLocation, type CityResult } from "@/lib/location-client";
 import { DEFAULT_PLACE, shortName } from "@/lib/location";
-import { relativeDay, today as londonToday, toLondonDate } from "@/lib/dates";
+import { TZ, relativeDay, today as londonToday, toLondonDate } from "@/lib/dates";
 import { currentSubscription, disablePush, enablePush, isIOS, isStandalone, pushSupported, type PushInfo } from "@/lib/push-client";
 
 function move<T>(arr: T[], i: number, dir: -1 | 1): T[] {
@@ -45,6 +45,16 @@ export default function SettingsPage() {
     <>
       <PageHeader title="Settings" />
       <div className="gap-4 md:columns-2 2xl:columns-3 [&>*]:mb-4 [&>*]:break-inside-avoid">
+        <Card>
+          <CardTitle>You</CardTitle>
+          <div className="space-y-4">
+            <TextSetting label="Your name" hint="Used in the greeting and the morning summary" value={s.ownerName} placeholder="e.g. Jacob" onSave={(v) => saveSettings({ ownerName: v })} />
+            {s.features.timetable && (
+              <TextSetting label="Timetable group" hint="Shown on the Timetable page" value={s.timetableGroup} placeholder="e.g. 3-1b" onSave={(v) => saveSettings({ timetableGroup: v })} />
+            )}
+          </div>
+        </Card>
+
         <Card>
           <CardTitle>Today screen</CardTitle>
           <p className="mb-2 text-[14px] text-muted">Choose which cards show and in what order.</p>
@@ -144,7 +154,7 @@ export default function SettingsPage() {
           >
             <IconLogout size={20} /> Sign out on this device
           </Button>
-          <p className="mt-3 text-[13px] text-faint">Life · times in Europe/London · weather from Open-Meteo</p>
+          <p className="mt-3 text-[13px] text-faint">Life · times in {TZ} · weather from Open-Meteo</p>
         </Card>
       </div>
     </>
@@ -157,6 +167,25 @@ function LinkRow({ href, label }: { href: string; label: string }) {
       {label}
       <IconChevronRight className="text-faint" />
     </Link>
+  );
+}
+
+/** Text input that saves when you finish editing. */
+function TextSetting({ label, hint, value, placeholder, onSave }: { label: string; hint?: string; value: string; placeholder?: string; onSave: (v: string) => void }) {
+  const [v, setV] = useState(value);
+  useEffect(() => setV(value), [value]);
+  return (
+    <Field label={label} hint={hint}>
+      <input
+        className="field"
+        value={v}
+        maxLength={40}
+        placeholder={placeholder}
+        onChange={(e) => setV(e.target.value)}
+        onBlur={() => v.trim() !== value && onSave(v.trim())}
+        onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+      />
+    </Field>
   );
 }
 
@@ -454,7 +483,7 @@ function LocationCard() {
 
   const last = s.lastLocation;
   const lastSeen = last
-    ? `${toLondonDate(last.at) === londonToday() ? "today" : relativeDay(toLondonDate(last.at)).toLowerCase()} at ${new Date(last.at).toLocaleTimeString("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit" })}`
+    ? `${toLondonDate(last.at) === londonToday() ? "today" : relativeDay(toLondonDate(last.at)).toLowerCase()} at ${new Date(last.at).toLocaleTimeString("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit" })}`
     : null;
 
   return (
@@ -484,7 +513,7 @@ function LocationCard() {
             : place.source === "device"
               ? `Last updated ${lastSeen}${status === "denied" ? " · location access is off" : ""}`
               : status === "denied"
-                ? "Location access is off, so using the default (Ramsey)"
+                ? `Location access is off, so using the default (${shortName(DEFAULT_PLACE.name)})`
                 : "Default — no location saved yet"}
         </p>
       </div>

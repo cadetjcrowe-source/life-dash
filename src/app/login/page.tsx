@@ -35,7 +35,7 @@ function LoginForm() {
     <form onSubmit={submit} className="anim-rise w-full max-w-sm">
       <img src="/icons/icon-192.png" alt="" className="mx-auto mb-5 h-20 w-20 rounded-[22px] shadow-float" />
       <h1 className="mb-1 text-center text-[28px] font-bold tracking-tight">Life</h1>
-      <p className="mb-8 text-center text-muted">Welcome back, Jacob</p>
+      <p className="mb-8 text-center text-muted">Welcome back</p>
       <input
         type="password"
         autoComplete="current-password"

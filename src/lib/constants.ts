@@ -1,12 +1,13 @@
 import type { FeatureKey, GymDay, Settings, TodayCardId } from "@/db/schema";
 
 // Starting categories (stored in the `categories` table, editable in Settings).
+// (Only used for a moment while the real list loads.)
 export const DEFAULT_CATEGORIES = [
-  { name: "College", color: "#6E8FD8" },
-  { name: "Cadets", color: "#7FA37A" },
-  { name: "Roblox dev", color: "#D69A5C" },
-  { name: "Music", color: "#B184C9" },
+  { name: "Study", color: "#6E8FD8" },
+  { name: "Work", color: "#D69A5C" },
   { name: "Personal", color: "#5FAFAA" },
+  { name: "Health", color: "#7FA37A" },
+  { name: "Creative", color: "#B184C9" },
   { name: "Other", color: "#9A9AA3" },
 ];
 
@@ -57,7 +58,7 @@ export const FEATURES: { key: FeatureKey; label: string; description: string }[]
   { key: "golden", label: "Golden hour", description: "Sunrise, sunset & golden hour countdown on Today" },
   { key: "assignments", label: "Assignment countdowns", description: "Big days-left cards for assignments" },
   { key: "shots", label: "Shot ideas", description: "Board of photo & video ideas" },
-  { key: "kit", label: "Cadets kit lists", description: "Reusable packing checklists" },
+  { key: "kit", label: "Kit lists", description: "Reusable packing checklists" },
   { key: "gymPlan", label: "Gym plan", description: "Beginner full-body routine" },
   { key: "pixels", label: "Year in pixels", description: "Your year at a glance" },
   { key: "morningPush", label: "Morning summary", description: "A notification each morning" },
@@ -143,7 +144,8 @@ export const DEFAULT_SETTINGS: Settings = {
   locationMode: "current",
   fixedLocation: null,
   lastLocation: null,
-  timetableGroup: "3-1b",
+  timetableGroup: "",
+  ownerName: "",
 };
 
 /** Fill in any settings keys added since the user's settings were first saved. */
@@ -160,4 +162,3 @@ export function withDefaults(saved: Partial<Settings> | null | undefined): Setti
   return s;
 }
 
-export const RAMSEY = { lat: 54.32, lon: -4.38, name: "Ramsey" };

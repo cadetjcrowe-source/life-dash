@@ -128,7 +128,9 @@ export default function TodayPage() {
       <header className="flex items-start justify-between gap-3 pt-4 md:pt-8">
         <div>
           <p className="text-[15px] font-semibold uppercase tracking-wide text-accent">{formatLong(today)}</p>
-          <h1 className="text-[32px] font-bold leading-tight tracking-tight md:text-[36px]">{greeting()}, Jacob</h1>
+          <h1 className="text-[32px] font-bold leading-tight tracking-tight md:text-[36px]">{greeting()}
+            {s.ownerName ? `, ${s.ownerName}` : ""}
+          </h1>
         </div>
         <IconButton label="More" onClick={() => setMenu(true)} className="mt-1 bg-card shadow-card md:hidden">
           <IconMore />

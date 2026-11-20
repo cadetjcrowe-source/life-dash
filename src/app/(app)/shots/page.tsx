@@ -196,7 +196,7 @@ function ShotSheet({ open, shot, onClose, knownTags }: { open: boolean; shot?: S
       }
     >
       <div className="space-y-4">
-        <input className="field text-[18px] font-medium" placeholder="e.g. Drone shot of Ramsey harbour at sunset" value={d.title} onChange={(e) => set("title", e.target.value)} autoFocus={!shot} />
+        <input className="field text-[18px] font-medium" placeholder="e.g. Drone shot of the harbour at sunset" value={d.title} onChange={(e) => set("title", e.target.value)} autoFocus={!shot} />
         <Field label="Description">
           <textarea className="field min-h-20" placeholder="Angle, lens, mood, gear…" value={d.description ?? ""} onChange={(e) => set("description", e.target.value)} />
         </Field>

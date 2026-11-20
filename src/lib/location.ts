@@ -1,11 +1,11 @@
 // Which place the weather and sun times are for. Shared by server and client.
 import type { Place, Settings } from "@/db/schema";
-import { RAMSEY } from "./constants";
+import { DEFAULT_LOCATION } from "./profile";
 
 export type LocationSource = "fixed" | "device" | "default";
 export type ResolvedPlace = Place & { source: LocationSource; at?: string };
 
-export const DEFAULT_PLACE: Place = { lat: RAMSEY.lat, lon: RAMSEY.lon, name: "Ramsey, Isle of Man" };
+export const DEFAULT_PLACE: Place = DEFAULT_LOCATION;
 
 /** How long a location stays fresh, and how far you must move before it's re-saved. */
 export const LOCATION_MAX_AGE_MS = 30 * 60 * 1000;
@@ -13,7 +13,7 @@ export const LOCATION_MOVE_KM = 3;
 
 /**
  * Fixed mode uses the chosen city. Otherwise the last device location the app
- * saved, falling back to Ramsey, Isle of Man.
+ * saved, falling back to the default place (Ramsey, Isle of Man unless configured).
  */
 export function resolveLocation(s: Pick<Settings, "locationMode" | "fixedLocation" | "lastLocation">): ResolvedPlace {
   if (s.locationMode === "fixed" && s.fixedLocation) return { ...s.fixedLocation, source: "fixed" };

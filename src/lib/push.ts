@@ -79,5 +79,5 @@ export async function buildMorningSummary(): Promise<PushPayload> {
   const top = topThree(tasks, t);
   lines.push(top.length ? `✅ ${top.map((x, i) => `${i + 1}. ${x.title}`).join("  ")}` : "✅ No tasks lined up. Enjoy the day!");
 
-  return { title: "Good morning, Jacob ☀️", body: lines.join("\n"), url: "/", tag: `morning-${t}` };
+  return { title: `Good morning${settings.ownerName ? `, ${settings.ownerName}` : ""} ☀️`, body: lines.join("\n"), url: "/", tag: `morning-${t}` };
 }

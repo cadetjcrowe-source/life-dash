@@ -5,7 +5,7 @@ import { IconChevronLeft, IconChevronRight, IconPlus } from "@/components/Icons"
 import { toast } from "@/components/Toast";
 import { Button, Card, Field, IconButton, PageHeader, Segmented, Sheet, Skeleton, cx } from "@/components/ui";
 import { addEvent, deleteEvent, saveSettings, updateEvent } from "@/lib/actions";
-import { categoryColor } from "@/lib/categories";
+import { categoryColor, useCategoryNames } from "@/lib/categories";
 import { useEvents, useSettings } from "@/lib/client";
 import { DEFAULT_SETTINGS } from "@/lib/constants";
 import { addDays, formatDayMonth, formatShort, formatWeekdayShort, nowTime, weekStart } from "@/lib/dates";
@@ -182,7 +182,6 @@ function DayColumn({ date, today, lessons, onOpen, onAdd }: { date: string; toda
     const id = setInterval(() => setNow(nowTime()), 60_000);
     return () => clearInterval(id);
   }, [date, today]);
-  const col = categoryColor("College");
   const nowTop = now ? clampTop(toMin(now)) : -1;
   const free = lessons.every((l) => l.skipped);
 
@@ -205,6 +204,7 @@ function DayColumn({ date, today, lessons, onOpen, onAdd }: { date: string; toda
         if (!l.startTime) return null;
         const s = toMin(l.startTime);
         const e = l.endTime ? Math.max(toMin(l.endTime), s + 20) : s + 60;
+        const col = categoryColor(l.category);
         const top = 8 + (clampTop(s) / 60) * HOUR_PX;
         const height = ((clampTop(e) - clampTop(s)) / 60) * HOUR_PX;
         return (
@@ -255,6 +255,9 @@ function LessonSheet({ open, lesson, dayIdx, monday, onClose }: { open: boolean;
     );
   }, [open, lesson, dayIdx]);
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((s) => ({ ...s, [k]: v }));
+  // New lessons go in "College" (or "Study") if you have it, else your first category.
+  const cats = useCategoryNames();
+  const lessonCategory = cats.find((c) => c === "College") ?? cats.find((c) => c === "Study") ?? cats[0] ?? "Personal";
   const valid = d.location.trim() && d.startTime && d.endTime && d.startTime < d.endTime;
 
   const save = () => {
@@ -270,7 +273,7 @@ function LessonSheet({ open, lesson, dayIdx, monday, onClose }: { open: boolean;
       // Keep the series' first week; just move it to the chosen weekday.
       updateEvent(lesson.id, { ...fields, date: addDays(weekStart(lesson.date), d.dayIdx) });
     } else {
-      addEvent({ ...fields, date: addDays(monday, d.dayIdx), category: "College", repeat: "weekly", excludedDates: [], kind: "lesson" });
+      addEvent({ ...fields, date: addDays(monday, d.dayIdx), category: lessonCategory, repeat: "weekly", excludedDates: [], kind: "lesson" });
     }
     toast(lesson ? "Lesson updated" : "Lesson added");
     onClose();

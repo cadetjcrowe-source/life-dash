@@ -1,6 +1,8 @@
 ALTER TABLE "events" ADD COLUMN "kind" text DEFAULT 'event' NOT NULL;--> statement-breakpoint
 -- Data: Jacob's college timetable (group 3-1b) as weekly lessons, starting the
--- week of Mon 16 Nov 2026. Only added if there are no lessons yet.
+-- week of Mon 16 Nov 2026. Only added to Jacob's own database (recognised by his
+-- starter projects) and only if there are no lessons yet – a fresh copy of this
+-- app for someone else starts with an empty timetable.
 INSERT INTO "events" ("title", "date", "start_time", "end_time", "location", "category", "repeat", "kind")
 SELECT v.title, v.date::date, v.s, v.e, v.room, 'College', 'weekly', 'lesson'
 FROM (VALUES
@@ -13,4 +15,5 @@ FROM (VALUES
   ('Lesson', '2026-11-20', '12:00', '13:30', 'M223'),
   ('Lesson', '2026-11-20', '14:30', '16:00', 'K313')
 ) AS v(title, date, s, e, room)
-WHERE NOT EXISTS (SELECT 1 FROM "events" WHERE "kind" = 'lesson');
+WHERE NOT EXISTS (SELECT 1 FROM "events" WHERE "kind" = 'lesson')
+  AND EXISTS (SELECT 1 FROM "projects" WHERE "name" IN ('Northminster', 'Westbridge'));

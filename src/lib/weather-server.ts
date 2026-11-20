@@ -1,5 +1,6 @@
 import "server-only";
 import type { ResolvedPlace } from "./location";
+import { TZ } from "./dates";
 import { assessDrone, assessOutside, type Weather } from "./weather";
 
 type OM = {
@@ -24,7 +25,7 @@ export async function getWeather(place: ResolvedPlace): Promise<Weather | null> 
   const params = new URLSearchParams({
     latitude: place.lat.toFixed(2),
     longitude: place.lon.toFixed(2),
-    timezone: "Europe/London",
+    timezone: TZ,
     wind_speed_unit: "kmh",
     forecast_days: "5",
     current:
